@@ -2,10 +2,6 @@ import { useEffect, useState } from 'react';
 import { useAppStore } from '../../../store/useAppStore';
 
 const DEFAULT_PASSWORD = 'Contado2025!';
-const USER_COLORS = [
-  '#FF6B35','#FF4757','#2ED573','#3498DB','#9B59B6',
-  '#F39C12','#1ABC9C','#E91E8C','#00BCD4','#8BC34A',
-];
 
 export default function AdminUsersPage() {
   const adminUsers         = useAppStore(s => s.adminUsers);
@@ -18,7 +14,6 @@ export default function AdminUsersPage() {
   const adminDisableUser   = useAppStore(s => s.adminDisableUser);
   const adminEnableUser    = useAppStore(s => s.adminEnableUser);
   const adminDeleteUser    = useAppStore(s => s.adminDeleteUser);
-  const adminSetUserColor  = useAppStore(s => s.adminSetUserColor);
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm]         = useState({ displayName: '', email: '' });
@@ -120,18 +115,6 @@ export default function AdminUsersPage() {
                 <div className="user-card-tag danger">Cuenta desactivada</div>
               )}
             </div>
-          </div>
-
-          {/* Color picker */}
-          <div className="user-color-picker">
-            {USER_COLORS.map(c => (
-              <button
-                key={c}
-                className={`color-dot ${user.color === c ? 'active' : ''}`}
-                style={{ background: c }}
-                onClick={() => adminSetUserColor(user.id, c)}
-              />
-            ))}
           </div>
 
           {/* Actions — only for other users */}

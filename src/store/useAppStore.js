@@ -1,9 +1,10 @@
 import { create } from 'zustand';
-import { db, auth, secondaryAuth } from '../firebase';
+import { db, auth, secondaryAuth, storage } from '../firebase';
 import {
   collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
   onSnapshot, query, where, orderBy, serverTimestamp, writeBatch
 } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import {
   signInWithEmailAndPassword, signOut, onAuthStateChanged,
   createUserWithEmailAndPassword, updatePassword, signOut as fbSignOut,
@@ -66,6 +67,9 @@ export const useAppStore = create((set, get) => ({
   editingSlot:         null,
   editingScheduleId:   null,
   adminLoading:        false,
+
+  // ── Profile ───────────────────────────────────────────────────────────
+  profileModal: false,
 
   // ── UI ─────────────────────────────────────────────────────────────────
   syncState:    '',   // '' | 'syncing' | 'ok' | 'error'
@@ -607,6 +611,41 @@ export const useAppStore = create((set, get) => ({
   // ════════════════════════════════════════════════════════════════════════
   // UI HELPERS
   // ════════════════════════════════════════════════════════════════════════
+
+  openProfileModal()  { set({ profileModal: true }); },
+  closeProfileModal() { set({ profileModal: false }); },
+
+  async saveProfile({ displayName, color }) {
+    const { authUser, userDoc } = get();
+    if (!authUser) return;
+    set({ syncState: 'syncing' });
+    try {
+      await updateDoc(doc(db, 'users', authUser.uid), { displayName, color });
+      set({ userDoc: { ...userDoc, displayName, color }, syncState: 'ok' });
+      get().showToast('Perfil actualizado', 'success');
+    } catch {
+      get().showToast('Error al guardar', 'error');
+      set({ syncState: 'error' });
+    }
+  },
+
+  async uploadAvatar(file) {
+    const { authUser, userDoc } = get();
+    if (!authUser || !file) return;
+    set({ syncState: 'syncing' });
+    try {
+      const storageRef = ref(storage, `avatars/${authUser.uid}`);
+      await uploadBytes(storageRef, file);
+      const photoURL = await getDownloadURL(storageRef);
+      await updateDoc(doc(db, 'users', authUser.uid), { photoURL });
+      set({ userDoc: { ...userDoc, photoURL }, syncState: 'ok' });
+      get().showToast('Foto actualizada', 'success');
+    } catch (err) {
+      console.error(err);
+      get().showToast('Error al subir la foto', 'error');
+      set({ syncState: 'error' });
+    }
+  },
 
   showToast(msg, type = '') {
     set({ toastMsg: msg, toastType: type, toastVisible: true });
