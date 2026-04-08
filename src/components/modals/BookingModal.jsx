@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { formatDateFull, formatSlotRange, minutesToTime, getAvailableDurations } from '../../utils';
 import { CATEGORY_LABELS } from '../../constants';
@@ -39,6 +40,13 @@ export default function BookingModal() {
     minDuration,
     maxDuration
   );
+
+  // Auto-select first available duration in the store so confirmBooking can use it
+  useEffect(() => {
+    if (!selectedDuration && availableDurations.length > 0) {
+      setDuration(availableDurations[0].durationMin);
+    }
+  }, [availableDurations.length]);
 
   const chosenDuration = selectedDuration || availableDurations[0]?.durationMin;
   const timeRange = chosenDuration
