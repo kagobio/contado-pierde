@@ -76,13 +76,15 @@ export default function BookingModal() {
               {resource?.name}<br />
               {formatDateFull(selectedSlot.date)} · {timeRange}
             </div>
+          </div>
+          <div className="modal-footer">
             <button
               className="btn-primary"
-              style={{ maxWidth: 240 }}
               onClick={() => { closeModal(); setCurrentPage('mybookings'); }}
             >
               Ver mis reservas
             </button>
+            <button className="btn-ghost" onClick={closeModal}>cerrar</button>
           </div>
         </div>
       </div>
