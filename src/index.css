@@ -33,6 +33,7 @@
 
 /* ── Reset ─────────────────────────────────────────────────────────────── */
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+button { color: inherit; font-family: inherit; font-size: inherit; background: none; border: none; cursor: pointer; }
 
 html { overflow-x: hidden; }
 body {
