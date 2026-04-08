@@ -1,10 +1,9 @@
 import { create } from 'zustand';
-import { db, auth, secondaryAuth, storage } from '../firebase';
+import { db, auth, secondaryAuth } from '../firebase';
 import {
   collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
   onSnapshot, query, where, orderBy, serverTimestamp, writeBatch
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import {
   signInWithEmailAndPassword, signOut, onAuthStateChanged,
   createUserWithEmailAndPassword, updatePassword, signOut as fbSignOut,
@@ -21,6 +20,25 @@ let _unsubMyBookings  = null;
 let _unsubConfig      = null;
 
 function unsub(ref) { if (ref) { ref(); } }
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function compressImageToBase64(file, size = 160, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement('canvas');
+      const scale = Math.min(size / img.width, size / img.height, 1);
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
 
 // ── Store ──────────────────────────────────────────────────────────────────
 export const useAppStore = create((set, get) => ({
@@ -634,9 +652,7 @@ export const useAppStore = create((set, get) => ({
     if (!authUser || !file) return;
     set({ syncState: 'syncing' });
     try {
-      const storageRef = ref(storage, `avatars/${authUser.uid}`);
-      await uploadBytes(storageRef, file);
-      const photoURL = await getDownloadURL(storageRef);
+      const photoURL = await compressImageToBase64(file, 160, 0.75);
       await updateDoc(doc(db, 'users', authUser.uid), { photoURL });
       set({ userDoc: { ...userDoc, photoURL }, syncState: 'ok' });
       get().showToast('Foto actualizada', 'success');
