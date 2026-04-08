@@ -1,11 +1,9 @@
 import { useAppStore } from '../store/useAppStore';
-import ProfileModal from './modals/ProfileModal';
 
 export default function TopBar() {
-  const userDoc        = useAppStore(s => s.userDoc);
-  const syncState      = useAppStore(s => s.syncState);
-  const profileModal   = useAppStore(s => s.profileModal);
-  const openProfile    = useAppStore(s => s.openProfileModal);
+  const userDoc     = useAppStore(s => s.userDoc);
+  const syncState   = useAppStore(s => s.syncState);
+  const openProfile = useAppStore(s => s.openProfileModal);
 
   const initial = (userDoc?.displayName || userDoc?.email || '?')[0].toUpperCase();
 
@@ -30,8 +28,6 @@ export default function TopBar() {
           <span className="topbar-chevron">⌄</span>
         </button>
       </div>
-
-      {profileModal && <ProfileModal />}
     </header>
   );
 }

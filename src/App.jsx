@@ -6,14 +6,16 @@ import ChangePasswordScreen   from './pages/ChangePasswordScreen';
 import TopBar          from './components/TopBar';
 import NavBar          from './components/NavBar';
 import Toast           from './components/Toast';
+import ProfileModal    from './components/modals/ProfileModal';
 import ScheduleScreen  from './pages/app/ScheduleScreen';
 import MyBookingsScreen from './pages/app/MyBookingsScreen';
 import AdminScreen     from './pages/app/admin/AdminScreen';
 
 export default function App() {
-  const screen      = useAppStore(s => s.screen);
-  const currentPage = useAppStore(s => s.currentPage);
-  const initAuth    = useAppStore(s => s.initAuth);
+  const screen        = useAppStore(s => s.screen);
+  const currentPage   = useAppStore(s => s.currentPage);
+  const initAuth      = useAppStore(s => s.initAuth);
+  const profileModal  = useAppStore(s => s.profileModal);
 
   useEffect(() => {
     initAuth();
@@ -33,6 +35,7 @@ export default function App() {
 
       <NavBar />
       <Toast />
+      {profileModal && <ProfileModal />}
     </div>
   );
 }
