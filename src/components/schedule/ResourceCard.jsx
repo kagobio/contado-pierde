@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { CATEGORY_LABELS } from '../../constants';
+import { getSlotStatus } from '../../utils';
 import SlotChip from './SlotChip';
 import ResourceIcon from '../shared/ResourceIcon';
 
@@ -14,16 +15,26 @@ const CATEGORY_ACCENT = {
 };
 
 export default function ResourceCard({ resource, date, index = 0 }) {
-  const schedules = useAppStore(s => s.schedules);
+  const schedules  = useAppStore(s => s.schedules);
+  const bookings   = useAppStore(s => s.bookings);
+  const authUser   = useAppStore(s => s.authUser);
   const [open, setOpen] = useState(false);
 
-  const schedule = schedules.find(s => s.id === resource.scheduleId) || schedules[0];
+  const schedule   = schedules.find(s => s.id === resource.scheduleId) || schedules[0];
   const activeSlots = schedule?.slots?.filter(s => s.active) || [];
-  const accent = CATEGORY_ACCENT[resource.category] || '#888';
+  const accent      = CATEGORY_ACCENT[resource.category] || '#888';
+
+  // Count free / occupied slots for this resource+date
+  const slotStatuses = activeSlots.map(slot =>
+    getSlotStatus(resource.id, date, slot, bookings, authUser?.uid)
+  );
+  const freeCount     = slotStatuses.filter(s => s === 'available').length;
+  const occupiedCount = slotStatuses.filter(s => s === 'occupied' || s === 'mine').length;
+  const total         = activeSlots.length;
+  const occupancyPct  = total > 0 ? Math.round((occupiedCount / total) * 100) : 0;
 
   function handleClick() {
     setOpen(o => !o);
-    // Haptic feedback on mobile
     if (navigator.vibrate) navigator.vibrate(8);
   }
 
@@ -42,32 +53,43 @@ export default function ResourceCard({ resource, date, index = 0 }) {
           </div>
           <div className="resource-card-cat">{CATEGORY_LABELS[resource.category] || resource.category}</div>
         </div>
+
+        {/* Occupancy pill */}
+        {total > 0 && !open && (
+          <div className="occupancy-pill" style={{
+            '--occ-color': freeCount === 0 ? 'var(--danger)' : freeCount <= 2 ? '#FFD100' : 'var(--success)',
+          }}>
+            <span className="occupancy-dot" />
+            <span>{freeCount} libre{freeCount !== 1 ? 's' : ''}</span>
+          </div>
+        )}
+
         <span className={`resource-card-chevron ${open ? 'open' : ''}`}>›</span>
       </button>
 
       {open && (
-        <div className="resource-slots">
-          {activeSlots.length === 0 ? (
-            <span style={{ fontSize: 12, color: 'var(--muted)' }}>Sin franjas</span>
-          ) : (
-            activeSlots.map(slot => (
-              <SlotChip key={slot.id} slot={slot} resourceId={resource.id} date={date} />
-            ))
+        <>
+          {/* Occupancy bar */}
+          {total > 0 && (
+            <div className="occupancy-bar-wrap">
+              <div className="occupancy-bar">
+                <div className="occupancy-bar-fill" style={{ width: `${occupancyPct}%` }} />
+              </div>
+              <span className="occupancy-bar-label">{occupiedCount}/{total} ocupadas</span>
+            </div>
           )}
-        </div>
+
+          <div className="resource-slots">
+            {activeSlots.length === 0 ? (
+              <span style={{ fontSize: 12, color: 'var(--muted)' }}>Sin franjas</span>
+            ) : (
+              activeSlots.map(slot => (
+                <SlotChip key={slot.id} slot={slot} resourceId={resource.id} date={date} />
+              ))
+            )}
+          </div>
+        </>
       )}
     </div>
   );
-}
-
-function categoryColor(category) {
-  const colors = {
-    enlarger_cabin: 'rgba(255,107,53,0.15)',
-    enlarger_post:  'rgba(255,199,71,0.15)',
-    large_format:   'rgba(71,200,255,0.15)',
-    film_develop:   'rgba(200,71,255,0.15)',
-    scanner:        'rgba(57,211,83,0.15)',
-    other:          'rgba(255,255,255,0.08)',
-  };
-  return colors[category] || colors.other;
 }

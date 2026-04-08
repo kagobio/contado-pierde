@@ -89,6 +89,9 @@ export const useAppStore = create((set, get) => ({
   // ── Profile ───────────────────────────────────────────────────────────
   profileModal: false,
 
+  // ── Cancel confirmation sheet ─────────────────────────────────────────
+  cancelConfirmId:   null,  // bookingId pending cancel confirmation
+
   // ── UI ─────────────────────────────────────────────────────────────────
   syncState:    '',   // '' | 'syncing' | 'ok' | 'error'
   toastMsg:     '',
@@ -342,12 +345,27 @@ export const useAppStore = create((set, get) => ({
   setSelectedDuration(d) { set({ selectedDuration: d }); },
 
   async confirmBooking() {
-    const { selectedSlot, selectedDuration, bookingNotes, authUser, userDoc } = get();
+    const { selectedSlot, selectedDuration, bookingNotes, authUser, userDoc, appConfig, myBookings } = get();
     if (!selectedSlot || !authUser || !selectedDuration) return;
+
+    // Maintenance mode check
+    if (appConfig?.maintenanceMode) {
+      get().showToast('El laboratorio está en mantenimiento. Inténtalo más tarde.', 'error');
+      return;
+    }
+
+    // Max bookings per day check
+    const maxPerDay = appConfig?.maxBookingsPerUserPerDay ?? 3;
+    const { date } = selectedSlot;
+    const bookingsToday = myBookings.filter(b => b.date === date && b.status !== 'cancelled').length;
+    if (bookingsToday >= maxPerDay) {
+      get().showToast(`Límite de ${maxPerDay} reservas por día alcanzado`, 'error');
+      return;
+    }
 
     set({ bookingLoading: true, syncState: 'syncing' });
     try {
-      const { resourceId, date, startMinute } = selectedSlot;
+      const { resourceId, startMinute } = selectedSlot;
       const docId  = bookingDocId(resourceId, date, startMinute);
       const docRef = doc(db, 'bookings', docId);
 
@@ -382,9 +400,12 @@ export const useAppStore = create((set, get) => ({
     }
   },
 
+  // Cancel confirmation sheet flow
+  requestCancelBooking(bookingId) { set({ cancelConfirmId: bookingId }); },
+  dismissCancelConfirm()          { set({ cancelConfirmId: null }); },
+
   async cancelBooking(bookingId) {
-    if (!confirm('¿Cancelar esta reserva?')) return;
-    set({ syncState: 'syncing' });
+    set({ syncState: 'syncing', cancelConfirmId: null });
     try {
       await updateDoc(doc(db, 'bookings', bookingId), { status: 'cancelled' });
       get().showToast('Reserva cancelada', 'success');
@@ -583,6 +604,34 @@ export const useAppStore = create((set, get) => ({
     } catch {
       get().showToast('Error al reactivar usuario', 'error');
     }
+  },
+
+  async adminSaveConfig(fields) {
+    set({ syncState: 'syncing' });
+    try {
+      await updateDoc(doc(db, 'config', 'app'), fields);
+      set({ syncState: 'ok' });
+      get().showToast('Configuración guardada', 'success');
+    } catch (err) {
+      console.error(err);
+      get().showToast('Error al guardar configuración', 'error');
+      set({ syncState: 'error' });
+    }
+  },
+
+  async adminReorderResource(id, direction) {
+    const { resources } = get();
+    const sorted = [...resources].sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
+    const idx = sorted.findIndex(r => r.id === id);
+    if (direction === 'up'   && idx === 0) return;
+    if (direction === 'down' && idx === sorted.length - 1) return;
+    const swap = direction === 'up' ? idx - 1 : idx + 1;
+    const batch = writeBatch(db);
+    const orderA = sorted[idx].order ?? idx;
+    const orderB = sorted[swap].order ?? swap;
+    batch.update(doc(db, 'resources', sorted[idx].id), { order: orderB });
+    batch.update(doc(db, 'resources', sorted[swap].id), { order: orderA });
+    await batch.commit();
   },
 
   // ════════════════════════════════════════════════════════════════════════

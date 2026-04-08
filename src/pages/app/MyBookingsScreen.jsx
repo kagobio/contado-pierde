@@ -1,23 +1,21 @@
+import { useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { formatDateFull, formatSlotRange, todayStr } from '../../utils';
 import ResourceIcon from '../../components/shared/ResourceIcon';
 
 export default function MyBookingsScreen() {
-  const myBookings   = useAppStore(s => s.myBookings);
-  const resources    = useAppStore(s => s.resources);
-  const cancelBooking = useAppStore(s => s.cancelBooking);
+  const myBookings         = useAppStore(s => s.myBookings);
+  const resources          = useAppStore(s => s.resources);
+  const requestCancel      = useAppStore(s => s.requestCancelBooking);
 
   const today = todayStr();
+  const active = myBookings
+    .filter(b => b.date >= today && b.status !== 'cancelled')
+    .sort((a, b) => a.date === b.date ? a.startMinute - b.startMinute : a.date.localeCompare(b.date));
 
-  // Separate upcoming vs today
-  const todayBookings    = myBookings.filter(b => b.date === today && b.status !== 'cancelled');
-  const upcomingBookings = myBookings.filter(b => b.date > today && b.status !== 'cancelled');
+  const resourceMap = Object.fromEntries(resources.map(r => [r.id, r]));
 
-  function getResource(resourceId) {
-    return resources.find(r => r.id === resourceId);
-  }
-
-  if (myBookings.length === 0) {
+  if (active.length === 0) {
     return (
       <div className="mybookings-screen page-scroll">
         <div className="empty-state" style={{ marginTop: 60 }}>
@@ -33,45 +31,44 @@ export default function MyBookingsScreen() {
     );
   }
 
+  // Group by date
+  const byDate = active.reduce((acc, b) => {
+    (acc[b.date] = acc[b.date] || []).push(b);
+    return acc;
+  }, {});
+
   return (
     <div className="mybookings-screen page-scroll">
-      {todayBookings.length > 0 && (
-        <>
-          <div className="mybookings-section-title">Hoy</div>
-          {todayBookings.map(b => (
+      {Object.entries(byDate).map(([date, bookings]) => (
+        <div key={date} className="mybookings-day-group">
+          <div className="mybookings-day-label">
+            {date === today ? '⚡ Hoy' : formatDateFull(date)}
+          </div>
+          {bookings.map(b => (
             <BookingItem
               key={b.id}
               booking={b}
-              resource={getResource(b.resourceId)}
-              onCancel={() => cancelBooking(b.id)}
-              isToday
+              resource={resourceMap[b.resourceId]}
+              onCancel={() => requestCancel(b.id)}
             />
           ))}
-        </>
-      )}
-
-      {upcomingBookings.length > 0 && (
-        <>
-          <div className="mybookings-section-title">Próximas</div>
-          {upcomingBookings.map(b => (
-            <BookingItem
-              key={b.id}
-              booking={b}
-              resource={getResource(b.resourceId)}
-              onCancel={() => cancelBooking(b.id)}
-            />
-          ))}
-        </>
-      )}
+        </div>
+      ))}
     </div>
   );
 }
 
-function BookingItem({ booking, resource, onCancel, isToday }) {
+function BookingItem({ booking, resource, onCancel }) {
+  const [removing, setRemoving] = useState(false);
   const timeRange = formatSlotRange(booking.startMinute, booking.durationMin);
 
+  function handleCancel() {
+    setRemoving(true);
+    setTimeout(onCancel, 280);
+  }
+
   return (
-    <div className="booking-item">
+    <div className={`booking-item ${removing ? 'removing' : ''}`}>
       <div
         className="booking-item-icon"
         style={{ background: resource ? categoryColor(resource.category) : 'var(--bg3)' }}
@@ -82,17 +79,12 @@ function BookingItem({ booking, resource, onCancel, isToday }) {
       <div className="booking-item-body">
         <div className="booking-item-name">{resource?.name || booking.resourceId}</div>
         <div className="booking-item-detail">{timeRange}</div>
-        <div className="booking-item-date">
-          {isToday ? '⚡ Hoy' : formatDateFull(booking.date)}
-        </div>
         {booking.notes && (
-          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
-            📝 {booking.notes}
-          </div>
+          <div className="booking-item-notes">📝 {booking.notes}</div>
         )}
       </div>
 
-      <button className="cancel-btn" onClick={onCancel}>Cancelar</button>
+      <button className="cancel-btn" onClick={handleCancel}>Cancelar</button>
     </div>
   );
 }

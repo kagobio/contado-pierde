@@ -13,6 +13,9 @@ export default function AdminResourcesPage() {
   const editingResource   = useAppStore(s => s.editingResource);
   const closeResourceForm = useAppStore(s => s.closeResourceForm);
   const saveResource      = useAppStore(s => s.saveResource);
+  const reorderResource   = useAppStore(s => s.adminReorderResource);
+
+  const sorted = [...resources].sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
 
   return (
     <div className="admin-content">
@@ -23,8 +26,12 @@ export default function AdminResourcesPage() {
       )}
 
       <div className="admin-list">
-        {resources.map(r => (
+        {sorted.map((r, idx) => (
           <div key={r.id} className={`admin-resource-row ${r.active ? '' : 'inactive'}`}>
+            <div className="reorder-btns">
+              <button className="reorder-btn" onClick={() => reorderResource(r.id, 'up')}  disabled={idx === 0}>▲</button>
+              <button className="reorder-btn" onClick={() => reorderResource(r.id, 'down')} disabled={idx === sorted.length - 1}>▼</button>
+            </div>
             <div style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg3)', flexShrink: 0 }}>
               <ResourceIcon icon={r.icon} size={16} />
             </div>

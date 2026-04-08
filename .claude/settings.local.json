@@ -6,7 +6,13 @@
       "Bash(cp \"G:/Otros ordenadores/Pcdavid/Escritorio/3D/proyecto_3d/Portacarretes_Contado/Contado/vector_logo-CP_prueba.svg\" \"/c/Users/david/contado-pierde/public/logo-cp.svg\")",
       "Bash(cp \"G:/Otros ordenadores/Pcdavid/Escritorio\\\\3D\\\\proyecto_3d\\\\Portacarretes_Contado\\\\Contado\\\\vector_logo-CP_prueba.svg\" \"/c/Users/david/contado-pierde/public/logo-cp.svg\")",
       "mcp__Claude_Preview__preview_start",
-      "Bash(gh auth:*)"
+      "Bash(gh auth:*)",
+      "Bash(gh repo:*)",
+      "Bash(npm list:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)",
+      "Bash(npx vite:*)"
     ]
   }
 }

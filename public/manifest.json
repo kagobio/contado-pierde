@@ -1,0 +1,18 @@
+{
+  "name": "Contado Pierde",
+  "short_name": "Contado Pierde",
+  "description": "Reservas del laboratorio fotográfico Contado Pierde",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo-cp2.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
