@@ -1,12 +1,12 @@
 // ── Resource categories ────────────────────────────────────────────────────
 export const CATEGORIES = [
-  { id: 'all',            label: 'Todas',    icon: '⊞' },
-  { id: 'enlarger_cabin', label: 'Cabinas',  icon: '🔲' },
-  { id: 'enlarger_post',  label: 'Puestos',  icon: '🔲' },
-  { id: 'large_format',   label: 'G. Formato', icon: '🔲' },
-  { id: 'film_develop',   label: 'Película', icon: '🎞' },
-  { id: 'scanner',        label: 'Escáner',  icon: '🖨' },
-  { id: 'other',          label: 'Otros',    icon: '🔧' },
+  { id: 'all',            label: 'Todas' },
+  { id: 'enlarger_cabin', label: 'Cabinas' },
+  { id: 'enlarger_post',  label: 'Puestos' },
+  { id: 'large_format',   label: 'Gran Formato' },
+  { id: 'film_develop',   label: 'Película' },
+  { id: 'scanner',        label: 'Escáner' },
+  { id: 'other',          label: 'Otros' },
 ];
 
 export const CATEGORY_LABELS = {

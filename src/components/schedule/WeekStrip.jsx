@@ -21,13 +21,7 @@ export default function WeekStrip() {
         <span className="week-strip-month">{formatMonthYear(weekStart)}</span>
         <div className="week-nav">
           <button className="week-nav-btn" onClick={goPrevWeek} aria-label="Semana anterior">‹</button>
-          <button
-            className="week-nav-btn"
-            onClick={() => setSelectedDate(today)}
-            style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', width: 40 }}
-          >
-            HOY
-          </button>
+          <button className="week-nav-today" onClick={() => setSelectedDate(today)}>HOY</button>
           <button className="week-nav-btn" onClick={goNextWeek} aria-label="Semana siguiente">›</button>
         </div>
       </div>

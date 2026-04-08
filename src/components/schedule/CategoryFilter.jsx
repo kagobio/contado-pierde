@@ -13,7 +13,7 @@ export default function CategoryFilter() {
           className={`cat-pill ${selected === cat.id ? 'active' : ''}`}
           onClick={() => setSelectedCategory(cat.id)}
         >
-          {cat.icon} {cat.label}
+          {cat.label}
         </button>
       ))}
     </div>
