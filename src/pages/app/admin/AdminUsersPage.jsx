@@ -4,12 +4,15 @@ import { useAppStore } from '../../../store/useAppStore';
 const DEFAULT_PASSWORD = 'Contado2025!';
 
 export default function AdminUsersPage() {
-  const adminUsers      = useAppStore(s => s.adminUsers);
-  const adminLoading    = useAppStore(s => s.adminLoading);
-  const authUser        = useAppStore(s => s.authUser);
-  const loadUsers       = useAppStore(s => s.loadAdminUsers);
-  const setUserRole     = useAppStore(s => s.setUserRole);
-  const adminCreateUser = useAppStore(s => s.adminCreateUser);
+  const adminUsers        = useAppStore(s => s.adminUsers);
+  const adminLoading      = useAppStore(s => s.adminLoading);
+  const authUser          = useAppStore(s => s.authUser);
+  const loadUsers         = useAppStore(s => s.loadAdminUsers);
+  const setUserRole       = useAppStore(s => s.setUserRole);
+  const adminCreateUser   = useAppStore(s => s.adminCreateUser);
+  const adminResetPassword = useAppStore(s => s.adminResetPassword);
+  const adminDisableUser  = useAppStore(s => s.adminDisableUser);
+  const adminEnableUser   = useAppStore(s => s.adminEnableUser);
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm]   = useState({ displayName: '', email: '' });
@@ -104,7 +107,7 @@ export default function AdminUsersPage() {
       {adminLoading && <div style={{ textAlign: 'center', padding: 24 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>}
 
       {adminUsers.map(user => (
-        <div key={user.id} className="admin-user-row">
+        <div key={user.id} className={`admin-user-row ${user.disabled ? 'inactive' : ''}`}>
           <div
             className="admin-user-avatar"
             style={{ color: user.color || 'var(--accent)', border: `2px solid ${user.color || 'var(--border)'}` }}
@@ -114,25 +117,42 @@ export default function AdminUsersPage() {
           <div className="admin-user-info">
             <div className="admin-user-name">
               {user.displayName || '—'}
-              {user.mustChangePassword && (
+              {user.mustChangePassword && !user.disabled && (
                 <span style={{ fontSize: 10, color: 'var(--warning)', marginLeft: 6, fontWeight: 600 }}>
                   pendiente contraseña
+                </span>
+              )}
+              {user.disabled && (
+                <span style={{ fontSize: 10, color: 'var(--danger)', marginLeft: 6, fontWeight: 600 }}>
+                  desactivado
                 </span>
               )}
             </div>
             <div className="admin-user-email">{user.email}</div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-            <span className={`role-badge ${user.role}`}>{user.role}</span>
-            {user.id !== authUser?.uid && (
-              <button
-                style={{ fontSize: 11, color: 'var(--muted)', background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '3px 8px', cursor: 'pointer' }}
-                onClick={() => setUserRole(user.id, user.role === 'admin' ? 'member' : 'admin')}
-              >
+          {user.id !== authUser?.uid && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 }}>
+              <span className={`role-badge ${user.role}`}>{user.role}</span>
+              <button className="admin-user-action-btn"
+                onClick={() => setUserRole(user.id, user.role === 'admin' ? 'member' : 'admin')}>
                 {user.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}
               </button>
-            )}
-          </div>
+              <button className="admin-user-action-btn"
+                onClick={() => adminResetPassword(user.email)}>
+                Reset contraseña
+              </button>
+              {user.disabled
+                ? <button className="admin-user-action-btn success"
+                    onClick={() => adminEnableUser(user.id, user.displayName)}>
+                    Reactivar
+                  </button>
+                : <button className="admin-user-action-btn danger"
+                    onClick={() => adminDisableUser(user.id, user.displayName)}>
+                    Desactivar
+                  </button>
+              }
+            </div>
+          )}
         </div>
       ))}
     </div>

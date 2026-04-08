@@ -6,7 +6,8 @@ import {
 } from 'firebase/firestore';
 import {
   signInWithEmailAndPassword, signOut, onAuthStateChanged,
-  createUserWithEmailAndPassword, updatePassword, signOut as fbSignOut
+  createUserWithEmailAndPassword, updatePassword, signOut as fbSignOut,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { todayStr, getWeekStart, getWeekDates, addWeeks, bookingDocId } from '../utils';
 import { INITIAL_RESOURCES, INITIAL_SCHEDULES } from '../constants';
@@ -104,6 +105,14 @@ export const useAppStore = create((set, get) => ({
       }
 
       const userDoc = { id: user.uid, ...snap.data() };
+
+      if (userDoc.disabled) {
+        await signOut(auth);
+        set({ authUser: null, userDoc: null, screen: 'login', authLoading: false });
+        get().showToast('Cuenta desactivada. Contacta con el administrador.', 'error');
+        return;
+      }
+
       const screen = userDoc.mustChangePassword ? 'changepassword' : 'app';
       set({ userDoc, authLoading: false, screen });
 
@@ -502,6 +511,38 @@ export const useAppStore = create((set, get) => ({
     await updateDoc(doc(db, 'users', uid), { role });
     get().showToast(`Rol actualizado a ${role}`, 'success');
     get().loadAdminUsers();
+  },
+
+  async adminResetPassword(email) {
+    if (!confirm(`¿Enviar email de recuperación de contraseña a ${email}?`)) return;
+    try {
+      await sendPasswordResetEmail(auth, email);
+      get().showToast('Email de recuperación enviado', 'success');
+    } catch (err) {
+      console.error(err);
+      get().showToast('Error al enviar el email', 'error');
+    }
+  },
+
+  async adminDisableUser(uid, displayName) {
+    if (!confirm(`¿Desactivar la cuenta de ${displayName}? No podrá acceder a la app.`)) return;
+    try {
+      await updateDoc(doc(db, 'users', uid), { disabled: true });
+      get().showToast(`Cuenta de ${displayName} desactivada`, 'success');
+      get().loadAdminUsers();
+    } catch {
+      get().showToast('Error al desactivar usuario', 'error');
+    }
+  },
+
+  async adminEnableUser(uid, displayName) {
+    try {
+      await updateDoc(doc(db, 'users', uid), { disabled: false });
+      get().showToast(`Cuenta de ${displayName} reactivada`, 'success');
+      get().loadAdminUsers();
+    } catch {
+      get().showToast('Error al reactivar usuario', 'error');
+    }
   },
 
   // ════════════════════════════════════════════════════════════════════════
