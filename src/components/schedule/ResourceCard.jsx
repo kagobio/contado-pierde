@@ -4,25 +4,42 @@ import { CATEGORY_LABELS } from '../../constants';
 import SlotChip from './SlotChip';
 import ResourceIcon from '../shared/ResourceIcon';
 
-export default function ResourceCard({ resource, date }) {
+const CATEGORY_ACCENT = {
+  enlarger_cabin: '#FF6B35',
+  enlarger_post:  '#FFD100',
+  large_format:   '#47C8FF',
+  film_develop:   '#C847FF',
+  scanner:        '#39D353',
+  other:          '#888888',
+};
+
+export default function ResourceCard({ resource, date, index = 0 }) {
   const schedules = useAppStore(s => s.schedules);
   const [open, setOpen] = useState(false);
 
-  const schedule = schedules.find(s => s.id === resource.scheduleId)
-    || schedules[0];
+  const schedule = schedules.find(s => s.id === resource.scheduleId) || schedules[0];
   const activeSlots = schedule?.slots?.filter(s => s.active) || [];
+  const accent = CATEGORY_ACCENT[resource.category] || '#888';
+
+  function handleClick() {
+    setOpen(o => !o);
+    // Haptic feedback on mobile
+    if (navigator.vibrate) navigator.vibrate(8);
+  }
 
   return (
-    <div className="resource-card">
-      <button className="resource-card-header" onClick={() => setOpen(o => !o)}>
-        <div
-          className="resource-icon"
-          style={{ background: categoryColor(resource.category) }}
-        >
-          <ResourceIcon icon={resource.icon} />
+    <div
+      className="resource-card"
+      style={{ '--card-accent': accent, animationDelay: `${index * 40}ms` }}
+    >
+      <button className="resource-card-header" onClick={handleClick}>
+        <div className="resource-icon" style={{ background: `${accent}18` }}>
+          <ResourceIcon icon={resource.icon} style={{ color: accent }} />
         </div>
-        <div style={{ flex: 1 }}>
-          <div className="resource-card-name">{resource.name}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="resource-card-name">
+            {open ? resource.name : (resource.shortName || resource.name)}
+          </div>
           <div className="resource-card-cat">{CATEGORY_LABELS[resource.category] || resource.category}</div>
         </div>
         <span className={`resource-card-chevron ${open ? 'open' : ''}`}>›</span>
@@ -31,15 +48,10 @@ export default function ResourceCard({ resource, date }) {
       {open && (
         <div className="resource-slots">
           {activeSlots.length === 0 ? (
-            <span style={{ fontSize: 12, color: 'var(--muted)', padding: '0 4px 4px' }}>Sin franjas</span>
+            <span style={{ fontSize: 12, color: 'var(--muted)' }}>Sin franjas</span>
           ) : (
             activeSlots.map(slot => (
-              <SlotChip
-                key={slot.id}
-                slot={slot}
-                resourceId={resource.id}
-                date={date}
-              />
+              <SlotChip key={slot.id} slot={slot} resourceId={resource.id} date={date} />
             ))
           )}
         </div>

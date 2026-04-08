@@ -20,11 +20,13 @@ export default function MyBookingsScreen() {
   if (myBookings.length === 0) {
     return (
       <div className="mybookings-screen page-scroll">
-        <div className="empty-state" style={{ marginTop: 40 }}>
-          <div className="empty-state-icon">📋</div>
-          <div className="empty-state-text">No tienes reservas próximas</div>
-          <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
-            Ve al horario para hacer una nueva reserva
+        <div className="empty-state" style={{ marginTop: 60 }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--muted)', marginBottom: 16 }}>
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <div className="empty-state-text">Sin reservas próximas</div>
+          <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 6, maxWidth: 220, textAlign: 'center', lineHeight: 1.5 }}>
+            Explora el horario y reserva tu próxima sesión
           </div>
         </div>
       </div>

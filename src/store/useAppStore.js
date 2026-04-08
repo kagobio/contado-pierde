@@ -350,6 +350,7 @@ export const useAppStore = create((set, get) => ({
         notified: false,
       });
 
+      if (navigator.vibrate) navigator.vibrate([10, 50, 20]);
       set({ bookingLoading: false, bookingSuccess: true, syncState: 'ok' });
       setTimeout(() => get().closeBookingModal(), 3000);
     } catch (err) {

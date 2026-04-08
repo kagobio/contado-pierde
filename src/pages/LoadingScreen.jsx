@@ -1,9 +1,8 @@
 export default function LoadingScreen() {
   return (
     <div className="loading-screen">
-      <div className="loading-logo">CONTADO PIERDE</div>
-      <div className="spinner" />
-      <div className="loading-sub">cargando laboratorio</div>
+      <img src="/logo-cp2.svg" alt="Contado Pierde" className="loading-logo-img" />
+      <div className="spinner" style={{ marginTop: 32 }} />
     </div>
   );
 }
