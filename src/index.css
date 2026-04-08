@@ -29,6 +29,7 @@
   --muted2:    #333333;
   --danger:    #ff4747;
   --success:   #39d353;
+  --warning:   #ffc847;
 }
 
 /* ── Reset ─────────────────────────────────────────────────────────────── */
@@ -641,6 +642,22 @@ a { color: inherit; text-decoration: none; }
 }
 .role-badge.admin  { background: var(--accent-dim); color: var(--accent); }
 .role-badge.member { background: var(--bg3); color: var(--muted); border: 1px solid var(--border); }
+
+/* Create user form */
+.create-user-form {
+  display: flex; flex-direction: column; gap: 10px;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 14px;
+  padding: 16px; margin-bottom: 12px;
+}
+.create-user-success {
+  background: var(--bg2); border: 1px solid rgba(57,211,83,0.3); border-radius: 14px;
+  padding: 16px; margin-bottom: 12px; text-align: center;
+}
+.credentials-box {
+  background: var(--bg3); border-radius: 10px; padding: 12px 14px;
+  font-size: 13px; text-align: left; display: flex; flex-direction: column; gap: 4px;
+  border: 1px solid var(--border);
+}
 
 /* Admin: seed button */
 .seed-btn {

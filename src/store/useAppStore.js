@@ -1,11 +1,12 @@
 import { create } from 'zustand';
-import { db, auth } from '../firebase';
+import { db, auth, secondaryAuth } from '../firebase';
 import {
   collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
   onSnapshot, query, where, orderBy, serverTimestamp, writeBatch
 } from 'firebase/firestore';
 import {
-  signInWithEmailAndPassword, signOut, onAuthStateChanged
+  signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  createUserWithEmailAndPassword, updatePassword, signOut as fbSignOut
 } from 'firebase/auth';
 import { todayStr, getWeekStart, getWeekDates, addWeeks, bookingDocId } from '../utils';
 import { INITIAL_RESOURCES, INITIAL_SCHEDULES } from '../constants';
@@ -103,7 +104,8 @@ export const useAppStore = create((set, get) => ({
       }
 
       const userDoc = { id: user.uid, ...snap.data() };
-      set({ userDoc, authLoading: false, screen: 'app' });
+      const screen = userDoc.mustChangePassword ? 'changepassword' : 'app';
+      set({ userDoc, authLoading: false, screen });
 
       // Start all real-time listeners
       get().subscribeResources();
@@ -116,6 +118,53 @@ export const useAppStore = create((set, get) => ({
 
   async login(email, password) {
     await signInWithEmailAndPassword(auth, email, password);
+  },
+
+  async changePassword(newPassword) {
+    const { authUser, userDoc } = get();
+    if (!authUser) return;
+    set({ authLoading: true });
+    try {
+      await updatePassword(authUser, newPassword);
+      await updateDoc(doc(db, 'users', authUser.uid), { mustChangePassword: false });
+      set({ userDoc: { ...userDoc, mustChangePassword: false }, screen: 'app', authLoading: false });
+      get().subscribeResources();
+      get().subscribeSchedules();
+      get().subscribeConfig();
+      get().subscribeBookingsForWeek(get().weekStart);
+      get().subscribeMyBookings();
+    } catch (err) {
+      console.error(err);
+      set({ authLoading: false });
+      throw err;
+    }
+  },
+
+  async adminCreateUser({ displayName, email, password }) {
+    set({ syncState: 'syncing' });
+    try {
+      const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        displayName: displayName.trim(),
+        email,
+        role: 'member',
+        color: '#ff6b35',
+        mustChangePassword: true,
+        createdAt: serverTimestamp(),
+      });
+      await fbSignOut(secondaryAuth);
+      get().showToast(`Usuario ${displayName} creado`, 'success');
+      get().loadAdminUsers();
+      set({ syncState: 'ok' });
+    } catch (err) {
+      console.error(err);
+      const msg = err.code === 'auth/email-already-in-use'
+        ? 'Este email ya está registrado'
+        : 'Error al crear usuario';
+      get().showToast(msg, 'error');
+      set({ syncState: 'error' });
+      throw err;
+    }
   },
 
   async logout() {

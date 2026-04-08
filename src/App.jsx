@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useAppStore } from './store/useAppStore';
-import LoadingScreen   from './pages/LoadingScreen';
-import LoginScreen     from './pages/LoginScreen';
+import LoadingScreen          from './pages/LoadingScreen';
+import LoginScreen            from './pages/LoginScreen';
+import ChangePasswordScreen   from './pages/ChangePasswordScreen';
 import TopBar          from './components/TopBar';
 import NavBar          from './components/NavBar';
 import Toast           from './components/Toast';
@@ -18,8 +19,9 @@ export default function App() {
     initAuth();
   }, []);
 
-  if (screen === 'loading') return <LoadingScreen />;
-  if (screen === 'login')   return <LoginScreen />;
+  if (screen === 'loading')        return <LoadingScreen />;
+  if (screen === 'login')          return <LoginScreen />;
+  if (screen === 'changepassword') return <ChangePasswordScreen />;
 
   return (
     <div className="app-shell">
