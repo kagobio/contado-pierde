@@ -177,6 +177,11 @@ export const useAppStore = create((set, get) => ({
     }
   },
 
+  async adminSetUserColor(uid, color) {
+    await updateDoc(doc(db, 'users', uid), { color });
+    get().loadAdminUsers();
+  },
+
   async adminDeleteUser(uid, displayName) {
     if (!confirm(`¿Eliminar completamente a ${displayName}? Esta acción no se puede deshacer.`)) return;
     try {
