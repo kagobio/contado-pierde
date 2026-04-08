@@ -15,7 +15,7 @@ export default function TopBar() {
 
   return (
     <header className="topbar">
-      <img src="/logo-oveja.svg" alt="Contado Pierde" className="topbar-logo-img" />
+      <img src="/logo-cp2.svg" alt="Contado Pierde" className="topbar-logo-img" />
 
       <div className="topbar-right">
         <div className={`sync-dot ${syncState}`} title={syncState || 'sincronizado'} />

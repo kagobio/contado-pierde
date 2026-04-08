@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { CATEGORY_LABELS } from '../../constants';
 import SlotChip from './SlotChip';
@@ -5,41 +6,44 @@ import ResourceIcon from '../shared/ResourceIcon';
 
 export default function ResourceCard({ resource, date }) {
   const schedules = useAppStore(s => s.schedules);
+  const [open, setOpen] = useState(false);
 
-  // Find schedule for this resource
   const schedule = schedules.find(s => s.id === resource.scheduleId)
     || schedules[0];
   const activeSlots = schedule?.slots?.filter(s => s.active) || [];
 
   return (
     <div className="resource-card">
-      <div className="resource-card-header">
+      <button className="resource-card-header" onClick={() => setOpen(o => !o)}>
         <div
           className="resource-icon"
           style={{ background: categoryColor(resource.category) }}
         >
           <ResourceIcon icon={resource.icon} />
         </div>
-        <div>
+        <div style={{ flex: 1 }}>
           <div className="resource-card-name">{resource.name}</div>
           <div className="resource-card-cat">{CATEGORY_LABELS[resource.category] || resource.category}</div>
         </div>
-      </div>
+        <span className={`resource-card-chevron ${open ? 'open' : ''}`}>›</span>
+      </button>
 
-      <div className="resource-slots">
-        {activeSlots.length === 0 ? (
-          <span style={{ fontSize: 12, color: 'var(--muted)', padding: '0 4px 4px' }}>Sin franjas</span>
-        ) : (
-          activeSlots.map(slot => (
-            <SlotChip
-              key={slot.id}
-              slot={slot}
-              resourceId={resource.id}
-              date={date}
-            />
-          ))
-        )}
-      </div>
+      {open && (
+        <div className="resource-slots">
+          {activeSlots.length === 0 ? (
+            <span style={{ fontSize: 12, color: 'var(--muted)', padding: '0 4px 4px' }}>Sin franjas</span>
+          ) : (
+            activeSlots.map(slot => (
+              <SlotChip
+                key={slot.id}
+                slot={slot}
+                resourceId={resource.id}
+                date={date}
+              />
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -17,10 +17,14 @@ export default function SlotChip({ slot, resourceId, date }) {
   const isStart = booking ? booking.startMinute === slot.startMinute : false;
   const isMidRange = booking && !isStart;
 
+  const occupiedName = (status === 'occupied' && isStart && booking?.userName)
+    ? booking.userName
+    : null;
+
   const statusLabels = {
     available: 'libre',
     mine:      isStart ? 'mía' : '↑',
-    occupied:  isStart ? 'ocupado' : '↑',
+    occupied:  isStart ? (occupiedName || 'ocupado') : '↑',
     past:      '—',
   };
 
