@@ -193,13 +193,17 @@ export const useAppStore = create((set, get) => ({
     const q = query(
       collection(db, 'bookings'),
       where('date', '>=', weekStartStr),
-      where('date', '<=', weekEnd),
-      where('status', '!=', 'cancelled')
+      where('date', '<=', weekEnd)
     );
     _unsubBookings = onSnapshot(q, snap => {
-      const bookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const bookings = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(b => b.status !== 'cancelled');
       set({ bookings });
-    }, () => get().showToast('Error al cargar reservas', 'error'));
+    }, err => {
+      console.error('subscribeBookingsForWeek error:', err);
+      get().showToast('Error al cargar reservas', 'error');
+    });
   },
 
   subscribeMyBookings() {
