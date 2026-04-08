@@ -101,17 +101,33 @@ export function getBookingAtSlot(resourceId, dateStr, slotStartMinute, slotDurat
 
 // ── Slot status ────────────────────────────────────────────────────────────
 
-// Returns: 'available' | 'mine' | 'occupied' | 'past'
-export function getSlotStatus(resourceId, dateStr, slot, bookings, userId) {
+// Returns: 'available' | 'mine' | 'occupied' | 'blocked' | 'past'
+export function getSlotStatus(resourceId, dateStr, slot, bookings, userId, blocks = []) {
   const slotDate = strToDate(dateStr);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   if (slotDate < today) return 'past';
 
+  // Check blocks first
+  const block = getBlockAtSlot(resourceId, dateStr, slot.startMinute, blocks);
+  if (block) return 'blocked';
+
   const booking = getBookingAtSlot(resourceId, dateStr, slot.startMinute, slot.durationMin, bookings);
   if (!booking) return 'available';
   if (booking.userId === userId) return 'mine';
   return 'occupied';
+}
+
+// Returns a block that covers this resource+date+slot, or null
+export function getBlockAtSlot(resourceId, dateStr, slotStartMinute, blocks) {
+  return blocks.find(b => {
+    if (b.date !== dateStr) return false;
+    // resourceIds: [] means all resources
+    if (b.resourceIds.length > 0 && !b.resourceIds.includes(resourceId)) return false;
+    // slotStartMinutes: [] means all slots
+    if (b.slotStartMinutes.length > 0 && !b.slotStartMinutes.includes(slotStartMinute)) return false;
+    return true;
+  }) || null;
 }
 
 // ── Available durations for a booking starting at a slot ──────────────────

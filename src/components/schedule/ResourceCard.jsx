@@ -17,6 +17,7 @@ const CATEGORY_ACCENT = {
 export default function ResourceCard({ resource, date, index = 0 }) {
   const schedules  = useAppStore(s => s.schedules);
   const bookings   = useAppStore(s => s.bookings);
+  const blocks     = useAppStore(s => s.blocks);
   const authUser   = useAppStore(s => s.authUser);
   const [open, setOpen] = useState(false);
 
@@ -25,11 +26,11 @@ export default function ResourceCard({ resource, date, index = 0 }) {
   const accent      = CATEGORY_ACCENT[resource.category] || '#888';
 
   // Count free / occupied slots for this resource+date
-  const slotStatuses = activeSlots.map(slot =>
-    getSlotStatus(resource.id, date, slot, bookings, authUser?.uid)
+  const slotStatuses  = activeSlots.map(slot =>
+    getSlotStatus(resource.id, date, slot, bookings, authUser?.uid, blocks)
   );
   const freeCount     = slotStatuses.filter(s => s === 'available').length;
-  const occupiedCount = slotStatuses.filter(s => s === 'occupied' || s === 'mine').length;
+  const occupiedCount = slotStatuses.filter(s => s === 'occupied' || s === 'mine' || s === 'blocked').length;
   const total         = activeSlots.length;
   const occupancyPct  = total > 0 ? Math.round((occupiedCount / total) * 100) : 0;
 

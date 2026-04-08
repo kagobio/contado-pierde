@@ -18,6 +18,7 @@ let _unsubSchedules   = null;
 let _unsubBookings    = null;
 let _unsubMyBookings  = null;
 let _unsubConfig      = null;
+let _unsubBlocks      = null;
 
 function unsub(ref) { if (ref) { ref(); } }
 
@@ -64,6 +65,7 @@ export const useAppStore = create((set, get) => ({
   schedules:   [],
   bookings:    [],   // for current week window
   myBookings:  [],   // current user's all bookings
+  blocks:      [],   // lab event blocks for current week
   appConfig:   null,
 
   // ── Booking flow ──────────────────────────────────────────────────────
@@ -107,7 +109,7 @@ export const useAppStore = create((set, get) => ({
       if (!user) {
         // Clean up all listeners
         unsub(_unsubResources); unsub(_unsubSchedules);
-        unsub(_unsubBookings); unsub(_unsubMyBookings); unsub(_unsubConfig);
+        unsub(_unsubBookings); unsub(_unsubMyBookings); unsub(_unsubConfig); unsub(_unsubBlocks);
         set({ authUser: null, userDoc: null, screen: 'login', authLoading: false });
         return;
       }
@@ -142,6 +144,7 @@ export const useAppStore = create((set, get) => ({
       get().subscribeConfig();
       get().subscribeBookingsForWeek(get().weekStart);
       get().subscribeMyBookings();
+      get().subscribeBlocks(get().weekStart);
     });
   },
 
@@ -162,6 +165,7 @@ export const useAppStore = create((set, get) => ({
       get().subscribeConfig();
       get().subscribeBookingsForWeek(get().weekStart);
       get().subscribeMyBookings();
+      get().subscribeBlocks(get().weekStart);
     } catch (err) {
       console.error(err);
       set({ authLoading: false });
@@ -304,6 +308,53 @@ export const useAppStore = create((set, get) => ({
       console.error('subscribeBookingsForWeek error:', err);
       get().showToast('Error al cargar reservas', 'error');
     });
+    get().subscribeBlocks(weekStartStr);
+  },
+
+  subscribeBlocks(weekStartStr) {
+    unsub(_unsubBlocks);
+    const weekEnd = getWeekDates(weekStartStr)[6];
+    const q = query(
+      collection(db, 'blocks'),
+      where('date', '>=', weekStartStr),
+      where('date', '<=', weekEnd)
+    );
+    _unsubBlocks = onSnapshot(q, snap => {
+      const blocks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      set({ blocks });
+    }, err => {
+      console.error('subscribeBlocks error:', err);
+    });
+  },
+
+  async createBlock({ date, resourceIds, slotStartMinutes, label }) {
+    set({ syncState: 'syncing' });
+    try {
+      const { authUser } = get();
+      await setDoc(doc(collection(db, 'blocks')), {
+        date,
+        resourceIds:       resourceIds || [],       // [] = all resources
+        slotStartMinutes:  slotStartMinutes || [],   // [] = all slots (full day)
+        label:             label.trim() || 'Taller',
+        createdAt:         serverTimestamp(),
+        createdBy:         authUser?.uid || '',
+      });
+      set({ syncState: 'ok' });
+      get().showToast('Bloqueo creado', 'success');
+    } catch (err) {
+      console.error(err);
+      get().showToast('Error al crear bloqueo', 'error');
+      set({ syncState: 'error' });
+    }
+  },
+
+  async deleteBlock(blockId) {
+    try {
+      await deleteDoc(doc(db, 'blocks', blockId));
+      get().showToast('Bloqueo eliminado', 'success');
+    } catch (err) {
+      get().showToast('Error al eliminar bloqueo', 'error');
+    }
   },
 
   subscribeMyBookings() {

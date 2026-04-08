@@ -1,20 +1,25 @@
 import { useAppStore } from '../../store/useAppStore';
-import { getSlotStatus, getBookingAtSlot } from '../../utils';
+import { getSlotStatus, getBookingAtSlot, getBlockAtSlot } from '../../utils';
 
 export default function SlotChip({ slot, resourceId, date }) {
   const bookings  = useAppStore(s => s.bookings);
+  const blocks    = useAppStore(s => s.blocks);
   const authUser  = useAppStore(s => s.authUser);
   const openModal = useAppStore(s => s.openBookingModal);
 
-  const status = getSlotStatus(resourceId, date, slot, bookings, authUser?.uid);
+  const status = getSlotStatus(resourceId, date, slot, bookings, authUser?.uid, blocks);
 
-  // For "mine" slots, find the booking to show duration info
+  // For blocked slots, get the block label
+  const block = status === 'blocked'
+    ? getBlockAtSlot(resourceId, date, slot.startMinute, blocks)
+    : null;
+
+  // For "mine" / "occupied" slots, find the booking to show duration info
   const booking = (status === 'mine' || status === 'occupied')
     ? getBookingAtSlot(resourceId, date, slot.startMinute, slot.durationMin, bookings)
     : null;
 
-  // Check if this slot is the START of a booking (vs mid-range)
-  const isStart = booking ? booking.startMinute === slot.startMinute : false;
+  const isStart    = booking ? booking.startMinute === slot.startMinute : false;
   const isMidRange = booking && !isStart;
 
   const occupiedInitials = (status === 'occupied' && isStart && booking?.userName)
@@ -25,11 +30,12 @@ export default function SlotChip({ slot, resourceId, date }) {
     available: 'libre',
     mine:      isStart ? 'mía' : '↑',
     occupied:  isStart ? (occupiedInitials || 'ocup.') : '↑',
+    blocked:   '🔒',
     past:      '—',
   };
 
   function handleClick() {
-    if (status === 'occupied' || status === 'past') return;
+    if (status === 'occupied' || status === 'past' || status === 'blocked') return;
     openModal({
       resourceId,
       date,
@@ -43,11 +49,16 @@ export default function SlotChip({ slot, resourceId, date }) {
     <button
       className={`slot-chip ${status} ${isMidRange ? 'mid-range' : ''}`}
       onClick={handleClick}
-      disabled={status === 'occupied' || status === 'past'}
-      title={`${slot.label} — ${statusLabels[status]}`}
+      disabled={status === 'occupied' || status === 'past' || status === 'blocked'}
+      title={status === 'blocked'
+        ? `Bloqueado: ${block?.label || 'Taller'}`
+        : `${slot.label} — ${statusLabels[status]}`
+      }
     >
       <span className="slot-chip-time">{slot.label}</span>
-      <span className="slot-chip-label">{statusLabels[status]}</span>
+      <span className="slot-chip-label">
+        {status === 'blocked' ? (block?.label ? block.label.slice(0, 6) : '🔒') : statusLabels[status]}
+      </span>
     </button>
   );
 }
