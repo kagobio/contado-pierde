@@ -208,14 +208,18 @@ export const useAppStore = create((set, get) => ({
     if (!authUser) return;
     const q = query(
       collection(db, 'bookings'),
-      where('userId', '==', authUser.uid),
-      where('date', '>=', todayStr()),
-      orderBy('date'),
-      orderBy('startMinute')
+      where('userId', '==', authUser.uid)
     );
     _unsubMyBookings = onSnapshot(q, snap => {
-      const myBookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const today = todayStr();
+      const myBookings = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(b => b.date >= today && b.status !== 'cancelled')
+        .sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : a.startMinute - b.startMinute);
       set({ myBookings });
+    }, err => {
+      console.error('subscribeMyBookings error:', err);
+      get().showToast('Error al cargar tus reservas', 'error');
     });
   },
 
