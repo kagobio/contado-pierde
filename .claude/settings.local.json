@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(cp \"G:/Otros ordenadores/Pcdavid/Escritorio/3D/proyecto_3d/Portacarretes_Contado/Contado/vector_logo-oveja.svg\" \"/c/Users/david/contado-pierde/public/logo-oveja.svg\")",
+      "Bash(cp \"G:/Otros ordenadores/Pcdavid/Escritorio/3D/proyecto_3d/Portacarretes_Contado/Contado/vector_logo-CP_prueba.svg\" \"/c/Users/david/contado-pierde/public/logo-cp.svg\")",
+      "Bash(cp \"G:/Otros ordenadores/Pcdavid/Escritorio\\\\3D\\\\proyecto_3d\\\\Portacarretes_Contado\\\\Contado\\\\vector_logo-CP_prueba.svg\" \"/c/Users/david/contado-pierde/public/logo-cp.svg\")",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(gh auth:*)"
+    ]
+  }
+}
