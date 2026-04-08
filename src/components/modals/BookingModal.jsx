@@ -84,7 +84,6 @@ export default function BookingModal() {
             >
               Ver mis reservas
             </button>
-            <button className="btn-ghost" onClick={closeModal}>cerrar</button>
           </div>
         </div>
       </div>
