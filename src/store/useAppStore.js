@@ -89,19 +89,14 @@ export const useAppStore = create((set, get) => ({
 
       set({ authUser: user, authLoading: true });
 
-      // Load or create user doc
+      // Load user doc — must exist (created by admin via adminCreateUser)
       const userRef = doc(db, 'users', user.uid);
-      let snap = await getDoc(userRef);
+      const snap = await getDoc(userRef);
       if (!snap.exists()) {
-        const newUser = {
-          displayName: user.displayName || user.email.split('@')[0],
-          email: user.email,
-          role: 'member',
-          color: '#ff6b35',
-          createdAt: serverTimestamp(),
-        };
-        await setDoc(userRef, newUser);
-        snap = await getDoc(userRef);
+        await signOut(auth);
+        set({ authUser: null, userDoc: null, screen: 'login', authLoading: false });
+        get().showToast('Cuenta no encontrada. Contacta con el administrador.', 'error');
+        return;
       }
 
       const userDoc = { id: user.uid, ...snap.data() };
@@ -150,14 +145,20 @@ export const useAppStore = create((set, get) => ({
   },
 
   async adminCreateUser({ displayName, email, password }) {
+    const USER_COLORS = [
+      '#FF6B35','#FF4757','#2ED573','#3498DB','#9B59B6',
+      '#F39C12','#1ABC9C','#E91E8C','#00BCD4','#8BC34A',
+    ];
     set({ syncState: 'syncing' });
     try {
+      const { adminUsers } = get();
+      const color = USER_COLORS[adminUsers.length % USER_COLORS.length];
       const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
       await setDoc(doc(db, 'users', cred.user.uid), {
         displayName: displayName.trim(),
         email,
         role: 'member',
-        color: '#ff6b35',
+        color,
         mustChangePassword: true,
         createdAt: serverTimestamp(),
       });
@@ -173,6 +174,17 @@ export const useAppStore = create((set, get) => ({
       get().showToast(msg, 'error');
       set({ syncState: 'error' });
       throw err;
+    }
+  },
+
+  async adminDeleteUser(uid, displayName) {
+    if (!confirm(`¿Eliminar completamente a ${displayName}? Esta acción no se puede deshacer.`)) return;
+    try {
+      await deleteDoc(doc(db, 'users', uid));
+      get().showToast(`${displayName} eliminado`, 'success');
+      get().loadAdminUsers();
+    } catch {
+      get().showToast('Error al eliminar usuario', 'error');
     }
   },
 
