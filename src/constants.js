@@ -64,7 +64,7 @@ export const INITIAL_SCHEDULES = [
       { id: 'slot_1100', label: '11:00', startMinute: 660,  durationMin: 60,  active: true },
       { id: 'slot_1200', label: '12:00', startMinute: 720,  durationMin: 60,  active: true },
       { id: 'slot_1300', label: '13:00', startMinute: 780,  durationMin: 90,  active: true },
-      { id: 'slot_1430', label: '14:30', startMinute: 870,  durationMin: 150, active: true },
+      { id: 'slot_1430', label: '14:30', startMinute: 870,  durationMin: 150, active: false },
       { id: 'slot_1700', label: '17:00', startMinute: 1020, durationMin: 60,  active: true },
       { id: 'slot_1800', label: '18:00', startMinute: 1080, durationMin: 60,  active: true },
       { id: 'slot_1900', label: '19:00', startMinute: 1140, durationMin: 60,  active: true },
