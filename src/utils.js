@@ -153,7 +153,6 @@ export function getAvailableDurations(resourceId, dateStr, startMinute, slots, b
     : 24 * 60; // end of day
 
   // Build possible end points: each slot boundary after startMinute
-  // Stop if there's a gap between consecutive slots (lab is closed)
   const endPoints = [];
   let prevSlotEnd = null;
   for (let i = 0; i < sorted.length; i++) {
@@ -162,8 +161,13 @@ export function getAvailableDurations(resourceId, dateStr, startMinute, slots, b
     if (slotEnd <= startMinute) continue;
     if (slot.startMinute >= hardLimit) break; // blocked by another booking
 
-    // If there's a gap between the previous slot and this one, stop
+    // Stop if there's a physical gap between consecutive slots
     if (prevSlotEnd !== null && slot.startMinute > prevSlotEnd) break;
+
+    // Stop if this subsequent slot is a "break/closure" slot (durationMin > 90)
+    // e.g. the 14:30 slot with 150min represents the lab's midday closure.
+    // Bookings from before this slot can end AT its start, but not extend through it.
+    if (slot.startMinute > startMinute && slot.durationMin > 90) break;
 
     prevSlotEnd = slotEnd;
     const duration = slotEnd - startMinute;
