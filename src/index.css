@@ -586,11 +586,11 @@ a { color: inherit; text-decoration: none; }
 .toast.error   { border-color: rgba(255,71,71,0.4);  color: var(--danger); }
 
 /* ── Admin screen ────────────────────────────────────────────────────────── */
-.admin-shell { display: flex; flex-direction: column; flex: 1; }
+.admin-shell { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
 .admin-tabnav {
-  display: flex; gap: 2px; padding: 10px 12px 0;
+  display: flex; gap: 2px; padding: 10px 12px 0; flex-shrink: 0;
   overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 10; background: var(--bg1);
+  background: var(--bg1);
 }
 .admin-tabnav::-webkit-scrollbar { display: none; }
 .admin-tab {
@@ -599,7 +599,7 @@ a { color: inherit; text-decoration: none; }
   border-bottom: 2px solid transparent; transition: all 0.15s; margin-bottom: -1px;
 }
 .admin-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-.admin-content { padding: 16px 12px; flex: 1; }
+.admin-content { padding: 16px 12px; flex: 1; overflow-y: auto; min-height: 0; }
 
 /* Admin: Resource list */
 .admin-list { display: flex; flex-direction: column; gap: 6px; }
