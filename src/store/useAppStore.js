@@ -443,16 +443,6 @@ export const useAppStore = create((set, get) => ({
       return;
     }
 
-    // One booking per resource per day per user
-    const hasDup = userBookings.some(
-      b => b.resourceId === selectedSlot.resourceId && b.date === date
-    );
-    if (hasDup) {
-      get().showToast('Ya tienes una reserva para este recurso hoy', 'error');
-      set({ bookingLoading: false, syncState: '' });
-      return;
-    }
-
     // No overlapping bookings across any resource on the same day
     const newStart = selectedSlot.startMinute;
     const newEnd   = newStart + selectedDuration;
