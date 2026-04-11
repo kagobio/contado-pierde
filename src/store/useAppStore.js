@@ -405,16 +405,51 @@ export const useAppStore = create((set, get) => ({
       return;
     }
 
-    // Max bookings per day check
-    const maxPerDay = appConfig?.maxBookingsPerUserPerDay ?? 3;
-    const { date } = selectedSlot;
-    const bookingsToday = myBookings.filter(b => b.date === date && b.status !== 'cancelled').length;
-    if (bookingsToday >= maxPerDay) {
-      get().showToast(`Límite de ${maxPerDay} reservas por día alcanzado`, 'error');
+    // Max duration check
+    const resource = get().resources.find(r => r.id === selectedSlot.resourceId);
+    const maxDuration = resource?.maxDurationMin ?? 240;
+    if (selectedDuration > maxDuration) {
+      get().showToast(`La reserva no puede durar más de ${maxDuration / 60}h`, 'error');
       return;
     }
 
+    const { date } = selectedSlot;
+
     set({ bookingLoading: true, syncState: 'syncing' });
+
+    // Query all user bookings (single-field index, always works) then filter client-side
+    let userBookings = [];
+    try {
+      const userSnap = await getDocs(query(
+        collection(db, 'bookings'),
+        where('userId', '==', authUser.uid)
+      ));
+      userBookings = userSnap.docs.map(d => d.data()).filter(b => b.status !== 'cancelled');
+    } catch (err) {
+      console.error('Error checking existing bookings:', err);
+      get().showToast('Error al verificar reservas existentes', 'error');
+      set({ bookingLoading: false, syncState: 'error' });
+      return;
+    }
+
+    // One booking per resource per day per user
+    const hasDup = userBookings.some(
+      b => b.resourceId === selectedSlot.resourceId && b.date === date
+    );
+    if (hasDup) {
+      get().showToast('Ya tienes una reserva para este recurso hoy', 'error');
+      set({ bookingLoading: false, syncState: '' });
+      return;
+    }
+
+    // Max bookings per day check
+    const maxPerDay = appConfig?.maxBookingsPerUserPerDay ?? 3;
+    const bookingsToday = userBookings.filter(b => b.date === date).length;
+    if (bookingsToday >= maxPerDay) {
+      get().showToast(`Límite de ${maxPerDay} reservas por día alcanzado`, 'error');
+      set({ bookingLoading: false, syncState: '' });
+      return;
+    }
     try {
       const { resourceId, startMinute } = selectedSlot;
       const docId  = bookingDocId(resourceId, date, startMinute);
@@ -448,6 +483,26 @@ export const useAppStore = create((set, get) => ({
       console.error(err);
       get().showToast('Error al guardar la reserva', 'error');
       set({ bookingLoading: false, syncState: 'error' });
+    }
+  },
+
+  async updateBooking(bookingId, newDurationMin) {
+    const { resources, bookings } = get();
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking) return;
+    const resource = resources.find(r => r.id === booking.resourceId);
+    const maxDuration = resource?.maxDurationMin ?? 240;
+    if (newDurationMin > maxDuration) {
+      get().showToast(`La reserva no puede durar más de ${maxDuration / 60}h`, 'error');
+      return;
+    }
+    try {
+      await updateDoc(doc(db, 'bookings', bookingId), { durationMin: newDurationMin });
+      get().showToast('Reserva actualizada', 'success');
+      get().closeBookingModal();
+    } catch (err) {
+      console.error(err);
+      get().showToast('Error al actualizar la reserva', 'error');
     }
   },
 
