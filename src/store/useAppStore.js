@@ -415,6 +415,17 @@ export const useAppStore = create((set, get) => ({
 
     const { date } = selectedSlot;
 
+    // Max advance days check
+    const maxAdvanceDays = appConfig?.maxAdvanceDays ?? 7;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const bookingDate = new Date(date + 'T00:00:00');
+    const diffDays = Math.round((bookingDate - today) / (1000 * 60 * 60 * 24));
+    if (diffDays > maxAdvanceDays) {
+      get().showToast(`Solo puedes reservar con ${maxAdvanceDays} día${maxAdvanceDays !== 1 ? 's' : ''} de antelación`, 'error');
+      return;
+    }
+
     set({ bookingLoading: true, syncState: 'syncing' });
 
     // Query all user bookings (single-field index, always works) then filter client-side
@@ -438,6 +449,20 @@ export const useAppStore = create((set, get) => ({
     );
     if (hasDup) {
       get().showToast('Ya tienes una reserva para este recurso hoy', 'error');
+      set({ bookingLoading: false, syncState: '' });
+      return;
+    }
+
+    // No overlapping bookings across any resource on the same day
+    const newStart = selectedSlot.startMinute;
+    const newEnd   = newStart + selectedDuration;
+    const hasOverlap = userBookings.some(b => {
+      if (b.date !== date) return false;
+      const bEnd = b.startMinute + b.durationMin;
+      return newStart < bEnd && b.startMinute < newEnd;
+    });
+    if (hasOverlap) {
+      get().showToast('Ya tienes una reserva en ese horario', 'error');
       set({ bookingLoading: false, syncState: '' });
       return;
     }
