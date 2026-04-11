@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { formatDateFull, formatSlotRange, minutesToTime, getAvailableDurations } from '../../utils';
 import { CATEGORY_LABELS } from '../../constants';
@@ -19,7 +19,10 @@ export default function BookingModal() {
   const setDuration     = useAppStore(s => s.setSelectedDuration);
   const confirmBooking  = useAppStore(s => s.confirmBooking);
   const cancelBooking   = useAppStore(s => s.cancelBooking);
+  const updateBooking   = useAppStore(s => s.updateBooking);
   const setCurrentPage  = useAppStore(s => s.setCurrentPage);
+
+  const [editing, setEditing] = useState(false);
 
   if (!selectedSlot) return null;
 
@@ -29,29 +32,6 @@ export default function BookingModal() {
 
   const minDuration = resource?.minDurationMin || 60;
   const maxDuration = resource?.maxDurationMin || 240;
-
-  // Calculate available end times
-  const availableDurations = getAvailableDurations(
-    selectedSlot.resourceId,
-    selectedSlot.date,
-    selectedSlot.startMinute,
-    activeSlots,
-    bookings,
-    minDuration,
-    maxDuration
-  );
-
-  // Auto-select first available duration in the store so confirmBooking can use it
-  useEffect(() => {
-    if (!selectedDuration && availableDurations.length > 0) {
-      setDuration(availableDurations[0].durationMin);
-    }
-  }, [availableDurations.length]);
-
-  const chosenDuration = selectedDuration || availableDurations[0]?.durationMin;
-  const timeRange = chosenDuration
-    ? `${minutesToTime(selectedSlot.startMinute)} – ${minutesToTime(selectedSlot.startMinute + chosenDuration)}`
-    : minutesToTime(selectedSlot.startMinute);
 
   // Find existing booking for "mine" mode
   const myBookingDoc = bookingMode === 'view'
@@ -63,8 +43,52 @@ export default function BookingModal() {
       )
     : null;
 
+  // When editing, exclude the current booking so it doesn't block itself
+  const bookingsForDuration = editing && myBookingDoc
+    ? bookings.filter(b => b.id !== myBookingDoc.id)
+    : bookings;
+
+  const availableDurations = getAvailableDurations(
+    selectedSlot.resourceId,
+    selectedSlot.date,
+    selectedSlot.startMinute,
+    activeSlots,
+    bookingsForDuration,
+    minDuration,
+    maxDuration
+  );
+
+  // Auto-select first available duration on open (book mode) or current duration on edit
+  useEffect(() => {
+    if (bookingMode === 'book' && !selectedDuration && availableDurations.length > 0) {
+      setDuration(availableDurations[0].durationMin);
+    }
+  }, [availableDurations.length, bookingMode]);
+
+  // When entering edit mode, pre-select current booking duration
+  useEffect(() => {
+    if (editing && myBookingDoc) {
+      setDuration(myBookingDoc.durationMin);
+    }
+  }, [editing]);
+
+  // Reset editing on modal close
+  useEffect(() => {
+    if (!selectedSlot) setEditing(false);
+  }, [selectedSlot]);
+
+  const chosenDuration = selectedDuration || availableDurations[0]?.durationMin;
+  const timeRange = chosenDuration
+    ? `${minutesToTime(selectedSlot.startMinute)} – ${minutesToTime(selectedSlot.startMinute + chosenDuration)}`
+    : minutesToTime(selectedSlot.startMinute);
+
   function handleOverlayClick(e) {
     if (e.target === e.currentTarget) closeModal();
+  }
+
+  function handleCancelEdit() {
+    setEditing(false);
+    setDuration(null);
   }
 
   // ── Success view ───────────────────────────────────────────────────────
@@ -133,8 +157,8 @@ export default function BookingModal() {
             </div>
           </div>
 
-          {/* Duration selector — only in "book" mode */}
-          {bookingMode === 'book' && (
+          {/* Duration selector — book mode or edit mode */}
+          {(bookingMode === 'book' || editing) && (
             <div>
               <div className="modal-notes-label" style={{ marginBottom: 8 }}>
                 Duración
@@ -162,10 +186,11 @@ export default function BookingModal() {
                 </div>
               )}
 
-              {/* Summary of chosen range */}
               {chosenDuration && (
                 <div className="booking-range-summary">
-                  <span style={{ color: 'var(--muted)', fontSize: 12 }}>Reservarás</span>
+                  <span style={{ color: 'var(--muted)', fontSize: 12 }}>
+                    {editing ? 'Nueva franja' : 'Reservarás'}
+                  </span>
                   <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--slot-available)' }}> {timeRange}</span>
                 </div>
               )}
@@ -173,7 +198,7 @@ export default function BookingModal() {
           )}
 
           {/* View mode: show existing booking info */}
-          {bookingMode === 'view' && myBookingDoc && (
+          {bookingMode === 'view' && !editing && myBookingDoc && (
             <>
               <div className="modal-row">
                 <span className="modal-row-icon">⏱</span>
@@ -199,7 +224,7 @@ export default function BookingModal() {
             </>
           )}
 
-          {/* Notes */}
+          {/* Notes — book mode only */}
           {bookingMode === 'book' && (
             <div>
               <div className="modal-notes-label">Notas (opcional)</div>
@@ -227,11 +252,28 @@ export default function BookingModal() {
               </button>
               <button className="btn-ghost" onClick={closeModal}>cancelar</button>
             </>
+          ) : editing ? (
+            <>
+              <button
+                className="btn-primary"
+                onClick={() => { if (myBookingDoc && chosenDuration) updateBooking(myBookingDoc.id, chosenDuration); }}
+                disabled={!chosenDuration || availableDurations.length === 0}
+              >
+                Guardar cambios
+              </button>
+              <button className="btn-ghost" onClick={handleCancelEdit}>volver</button>
+            </>
           ) : (
             <>
               <div style={{ textAlign: 'center', color: 'var(--slot-mine)', fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
                 Esta franja es tuya
               </div>
+              <button
+                className="btn-primary"
+                onClick={() => setEditing(true)}
+              >
+                Editar duración
+              </button>
               <button
                 className="btn-danger-ghost"
                 onClick={() => { if (myBookingDoc) { cancelBooking(myBookingDoc.id); closeModal(); } }}

@@ -3,14 +3,12 @@ import { useAppStore } from '../../store/useAppStore';
 import WeekStrip from '../../components/schedule/WeekStrip';
 import CategoryFilter from '../../components/schedule/CategoryFilter';
 import ResourceGrid from '../../components/schedule/ResourceGrid';
-import BookingModal from '../../components/modals/BookingModal';
 import { formatDateFull, todayStr, minutesToTime } from '../../utils';
 
 const PTR_THRESHOLD = 64; // px needed to trigger refresh
 
 export default function ScheduleScreen() {
   const selectedDate            = useAppStore(s => s.selectedDate);
-  const bookingModal            = useAppStore(s => s.bookingModal);
   const appConfig               = useAppStore(s => s.appConfig);
   const myBookings              = useAppStore(s => s.myBookings);
   const subscribeBookingsForWeek = useAppStore(s => s.subscribeBookingsForWeek);
@@ -109,7 +107,6 @@ export default function ScheduleScreen() {
 
       <ResourceGrid date={selectedDate} />
 
-      {bookingModal && <BookingModal />}
     </div>
   );
 }

@@ -7,6 +7,7 @@ export default function MyBookingsScreen() {
   const myBookings         = useAppStore(s => s.myBookings);
   const resources          = useAppStore(s => s.resources);
   const requestCancel      = useAppStore(s => s.requestCancelBooking);
+  const openModal          = useAppStore(s => s.openBookingModal);
 
   const today = todayStr();
   const active = myBookings
@@ -50,6 +51,7 @@ export default function MyBookingsScreen() {
               booking={b}
               resource={resourceMap[b.resourceId]}
               onCancel={() => requestCancel(b.id)}
+              onEdit={() => openModal({ resourceId: b.resourceId, date: b.date, startMinute: b.startMinute, status: 'mine' })}
             />
           ))}
         </div>
@@ -58,7 +60,7 @@ export default function MyBookingsScreen() {
   );
 }
 
-function BookingItem({ booking, resource, onCancel }) {
+function BookingItem({ booking, resource, onCancel, onEdit }) {
   const [removing, setRemoving] = useState(false);
   const timeRange = formatSlotRange(booking.startMinute, booking.durationMin);
 
@@ -84,7 +86,10 @@ function BookingItem({ booking, resource, onCancel }) {
         )}
       </div>
 
-      <button className="cancel-btn" onClick={handleCancel}>Cancelar</button>
+      <div className="booking-item-actions">
+        <button className="edit-btn" onClick={onEdit}>Editar</button>
+        <button className="cancel-btn" onClick={handleCancel}>Cancelar</button>
+      </div>
     </div>
   );
 }

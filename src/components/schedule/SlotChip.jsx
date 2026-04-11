@@ -39,7 +39,7 @@ export default function SlotChip({ slot, resourceId, date }) {
     openModal({
       resourceId,
       date,
-      startMinute: slot.startMinute,
+      startMinute: (status === 'mine' && booking) ? booking.startMinute : slot.startMinute,
       slotLabel:   slot.label,
       status,
     });
