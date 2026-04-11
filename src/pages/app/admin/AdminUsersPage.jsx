@@ -9,6 +9,8 @@ export default function AdminUsersPage() {
   const authUser           = useAppStore(s => s.authUser);
   const loadUsers          = useAppStore(s => s.loadAdminUsers);
   const setUserRole        = useAppStore(s => s.setUserRole);
+  const setUserTarifa      = useAppStore(s => s.setUserTarifa);
+  const appConfig          = useAppStore(s => s.appConfig);
   const adminCreateUser    = useAppStore(s => s.adminCreateUser);
   const adminResetPassword = useAppStore(s => s.adminResetPassword);
   const adminDisableUser   = useAppStore(s => s.adminDisableUser);
@@ -16,14 +18,14 @@ export default function AdminUsersPage() {
   const adminDeleteUser    = useAppStore(s => s.adminDeleteUser);
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm]         = useState({ displayName: '', email: '' });
+  const [form, setForm]         = useState({ displayName: '', email: '', tarifa: 'tarifa1' });
   const [creating, setCreating] = useState(false);
   const [created, setCreated]   = useState(null);
 
   useEffect(() => { loadUsers(); }, []);
 
   function resetForm() {
-    setForm({ displayName: '', email: '' });
+    setForm({ displayName: '', email: '', tarifa: 'tarifa1' });
     setCreated(null);
     setShowForm(false);
   }
@@ -33,7 +35,7 @@ export default function AdminUsersPage() {
     if (!form.displayName.trim() || !form.email.trim()) return;
     setCreating(true);
     try {
-      await adminCreateUser({ ...form, password: DEFAULT_PASSWORD });
+      await adminCreateUser({ ...form, password: DEFAULT_PASSWORD, tarifa: form.tarifa });
       setCreated({ ...form, password: DEFAULT_PASSWORD });
       setForm({ displayName: '', email: '' });
     } catch {
@@ -61,6 +63,17 @@ export default function AdminUsersPage() {
             onChange={e => setForm(f => ({ ...f, displayName: e.target.value }))} autoFocus />
           <input className="login-input" type="email" placeholder="Email" value={form.email}
             onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+          <div className="tarifa-selector">
+            {['tarifa1', 'tarifa2'].map(t => (
+              <button
+                key={t} type="button"
+                className={`tarifa-chip ${form.tarifa === t ? 'active' : ''}`}
+                onClick={() => setForm(f => ({ ...f, tarifa: t }))}
+              >
+                {appConfig?.tarifas?.[t]?.name || (t === 'tarifa1' ? 'Tarifa 1' : 'Tarifa 2')}
+              </button>
+            ))}
+          </div>
           <div style={{ fontSize: 12, color: 'var(--muted)', padding: '2px 0' }}>
             Contraseña por defecto: <strong style={{ color: 'var(--text)' }}>{DEFAULT_PASSWORD}</strong>
           </div>
@@ -106,6 +119,9 @@ export default function AdminUsersPage() {
               <div className="user-card-name">
                 {user.displayName || '—'}
                 <span className={`role-badge ${user.role}`} style={{ marginLeft: 8 }}>{user.role}</span>
+                <span className="tarifa-badge" style={{ marginLeft: 6 }}>
+                  {appConfig?.tarifas?.[user.tarifa || 'tarifa1']?.name || (user.tarifa === 'tarifa2' ? 'Tarifa 2' : 'Tarifa 1')}
+                </span>
               </div>
               <div className="user-card-email">{user.email}</div>
               {user.mustChangePassword && !user.disabled && (
@@ -123,6 +139,12 @@ export default function AdminUsersPage() {
               <button className="user-action-btn"
                 onClick={() => setUserRole(user.id, user.role === 'admin' ? 'member' : 'admin')}>
                 {user.role === 'admin' ? '↓ Quitar admin' : '↑ Hacer admin'}
+              </button>
+              <button className="user-action-btn"
+                onClick={() => setUserTarifa(user.id, (user.tarifa || 'tarifa1') === 'tarifa1' ? 'tarifa2' : 'tarifa1')}>
+                ⇄ {(user.tarifa || 'tarifa1') === 'tarifa1'
+                  ? `→ ${appConfig?.tarifas?.tarifa2?.name || 'Tarifa 2'}`
+                  : `→ ${appConfig?.tarifas?.tarifa1?.name || 'Tarifa 1'}`}
               </button>
               <button className="user-action-btn"
                 onClick={() => adminResetPassword(user.email)}>

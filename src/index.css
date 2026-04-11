@@ -735,6 +735,21 @@ a { color: inherit; text-decoration: none; }
 }
 .role-badge.admin  { background: var(--accent-dim); color: var(--accent); }
 .role-badge.member { background: var(--bg3); color: var(--muted); border: 1px solid var(--border); }
+.tarifa-badge {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 5px; background: rgba(71,200,255,0.12); color: #47c8ff;
+}
+.tarifa-selector { display: flex; gap: 8px; margin: 4px 0; }
+.tarifa-chip {
+  flex: 1; padding: 8px; border-radius: 10px; font-size: 13px; font-weight: 700;
+  border: 1px solid var(--border); background: var(--bg3); color: var(--muted); transition: all 0.15s;
+}
+.tarifa-chip.active { border-color: #47c8ff; background: rgba(71,200,255,0.12); color: #47c8ff; }
+.config-name-input {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-size: 13px; padding: 6px 10px; width: 140px; text-align: right;
+}
+.config-name-input:focus { border-color: var(--accent); outline: none; }
 
 /* Create user form */
 .create-user-form {
