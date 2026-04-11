@@ -33,7 +33,7 @@ export default function AdminScreen() {
   }
 
   return (
-    <div className="admin-shell page-scroll">
+    <div className="admin-shell">
       <nav className="admin-tabnav">
         {ADMIN_TABS.map(tab => (
           <button
