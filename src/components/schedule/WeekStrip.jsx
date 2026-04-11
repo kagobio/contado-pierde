@@ -7,12 +7,15 @@ export default function WeekStrip() {
   const weekStart    = useAppStore(s => s.weekStart);
   const myBookings   = useAppStore(s => s.myBookings);
   const appConfig    = useAppStore(s => s.appConfig);
+  const userDoc      = useAppStore(s => s.userDoc);
   const setSelectedDate = useAppStore(s => s.setSelectedDate);
   const goNextWeek   = useAppStore(s => s.goNextWeek);
   const goPrevWeek   = useAppStore(s => s.goPrevWeek);
 
   const today = todayStr();
-  const maxAdvanceDays = appConfig?.maxAdvanceDays ?? 7;
+  const tarifa = userDoc?.tarifa || 'tarifa1';
+  const tarifaLimits = appConfig?.tarifas?.[tarifa] || {};
+  const maxAdvanceDays = tarifaLimits.maxAdvanceDays ?? appConfig?.maxAdvanceDays ?? 7;
 
   // Last bookable date
   const todayDate = new Date(today + 'T00:00:00');

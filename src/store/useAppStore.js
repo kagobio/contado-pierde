@@ -173,7 +173,7 @@ export const useAppStore = create((set, get) => ({
     }
   },
 
-  async adminCreateUser({ displayName, email, password }) {
+  async adminCreateUser({ displayName, email, password, tarifa = 'tarifa1' }) {
     const USER_COLORS = [
       '#FF6B35','#FF4757','#2ED573','#3498DB','#9B59B6',
       '#F39C12','#1ABC9C','#E91E8C','#00BCD4','#8BC34A',
@@ -188,6 +188,7 @@ export const useAppStore = create((set, get) => ({
         email,
         role: 'member',
         color,
+        tarifa,
         mustChangePassword: true,
         createdAt: serverTimestamp(),
       });
@@ -415,8 +416,12 @@ export const useAppStore = create((set, get) => ({
 
     const { date } = selectedSlot;
 
+    // Resolve tariff limits for this user
+    const tarifa = userDoc?.tarifa || 'tarifa1';
+    const tarifaLimits = appConfig?.tarifas?.[tarifa] || {};
+
     // Max advance days check
-    const maxAdvanceDays = appConfig?.maxAdvanceDays ?? 7;
+    const maxAdvanceDays = tarifaLimits.maxAdvanceDays ?? appConfig?.maxAdvanceDays ?? 7;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const bookingDate = new Date(date + 'T00:00:00');
@@ -458,12 +463,36 @@ export const useAppStore = create((set, get) => ({
     }
 
     // Max bookings per day check
-    const maxPerDay = appConfig?.maxBookingsPerUserPerDay ?? 3;
+    const maxPerDay = tarifaLimits.maxBookingsPerUserPerDay ?? appConfig?.maxBookingsPerUserPerDay ?? 3;
     const bookingsToday = userBookings.filter(b => b.date === date).length;
     if (bookingsToday >= maxPerDay) {
       get().showToast(`Límite de ${maxPerDay} reservas por día alcanzado`, 'error');
       set({ bookingLoading: false, syncState: '' });
       return;
+    }
+
+    // Max hours per week check
+    const maxHoursWeek = tarifaLimits.maxHoursPerUserPerWeek ?? appConfig?.maxHoursPerUserPerWeek ?? 0; // 0 = sin límite
+    if (maxHoursWeek > 0) {
+      // Get Monday of the booking's week
+      const bDate = new Date(date + 'T00:00:00');
+      const dayOfWeek = bDate.getDay(); // 0=Sun,1=Mon…
+      const monday = new Date(bDate);
+      monday.setDate(bDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      const weekStart = monday.toISOString().slice(0, 10);
+      const weekEnd   = sunday.toISOString().slice(0, 10);
+      const hoursThisWeek = userBookings
+        .filter(b => b.date >= weekStart && b.date <= weekEnd)
+        .reduce((sum, b) => sum + b.durationMin, 0) / 60;
+      const newHours = selectedDuration / 60;
+      if (hoursThisWeek + newHours > maxHoursWeek) {
+        const remaining = Math.max(0, maxHoursWeek - hoursThisWeek);
+        get().showToast(`Límite semanal de ${maxHoursWeek}h alcanzado (te quedan ${remaining}h esta semana)`, 'error');
+        set({ bookingLoading: false, syncState: '' });
+        return;
+      }
     }
     try {
       const { resourceId, startMinute } = selectedSlot;
@@ -693,6 +722,16 @@ export const useAppStore = create((set, get) => ({
     await updateDoc(doc(db, 'users', uid), { role });
     get().showToast(`Rol actualizado a ${role}`, 'success');
     get().loadAdminUsers();
+  },
+
+  async setUserTarifa(uid, tarifa) {
+    try {
+      await updateDoc(doc(db, 'users', uid), { tarifa });
+      set(s => ({ adminUsers: s.adminUsers.map(u => u.id === uid ? { ...u, tarifa } : u) }));
+      get().showToast('Tarifa actualizada', 'success');
+    } catch {
+      get().showToast('Error al actualizar tarifa', 'error');
+    }
   },
 
   async adminResetPassword(email) {
