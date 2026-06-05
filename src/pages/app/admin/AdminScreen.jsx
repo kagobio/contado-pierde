@@ -6,6 +6,7 @@ import AdminUsersPage     from './AdminUsersPage';
 import AdminConfigPage    from './AdminConfigPage';
 import AdminStatsPage     from './AdminStatsPage';
 import AdminBlocksPage    from './AdminBlocksPage';
+import AdminChemicalsPage from './AdminChemicalsPage';
 
 const ADMIN_TABS = [
   { id: 'resources', label: 'Recursos' },
@@ -13,6 +14,7 @@ const ADMIN_TABS = [
   { id: 'bookings',  label: 'Reservas' },
   { id: 'blocks',    label: 'Bloqueos' },
   { id: 'stats',     label: 'Stats' },
+  { id: 'chemicals', label: 'Químicos' },
   { id: 'users',     label: 'Usuarios' },
   { id: 'config',    label: 'Config' },
 ];
@@ -51,6 +53,7 @@ export default function AdminScreen() {
       {adminPage === 'bookings'  && <AdminBookingsPage />}
       {adminPage === 'blocks'    && <AdminBlocksPage />}
       {adminPage === 'stats'     && <AdminStatsPage />}
+      {adminPage === 'chemicals' && <AdminChemicalsPage />}
       {adminPage === 'users'     && <AdminUsersPage />}
       {adminPage === 'config'    && <AdminConfigPage />}
     </div>
