@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { db, auth, secondaryAuth } from '../firebase';
 import {
   collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
-  onSnapshot, query, where, orderBy, serverTimestamp, writeBatch
+  onSnapshot, query, where, orderBy, serverTimestamp, writeBatch, increment
 } from 'firebase/firestore';
 import {
   signInWithEmailAndPassword, signOut, onAuthStateChanged,
@@ -67,6 +67,7 @@ export const useAppStore = create((set, get) => ({
   myBookings:  [],   // current user's all bookings
   blocks:      [],   // lab event blocks for current week
   appConfig:   null,
+  chemicals:   [],   // kit c41 + ecn2 global state
 
   // ── Booking flow ──────────────────────────────────────────────────────
   bookingModal:      false,
@@ -74,6 +75,7 @@ export const useAppStore = create((set, get) => ({
   bookingMode:       'book', // 'book' | 'view'
   selectedDuration:  null,  // chosen durationMin
   bookingNotes:      '',
+  chemicalUsage:     null,  // { processType: 'c41'|'ecn2', rolls: number } | null
   bookingLoading:    false,
   bookingSuccess:    false,
 
@@ -145,6 +147,7 @@ export const useAppStore = create((set, get) => ({
       get().subscribeBookingsForWeek(get().weekStart);
       get().subscribeMyBookings();
       get().subscribeBlocks(get().weekStart);
+      get().subscribeChemicals();
     });
   },
 
@@ -166,6 +169,7 @@ export const useAppStore = create((set, get) => ({
       get().subscribeBookingsForWeek(get().weekStart);
       get().subscribeMyBookings();
       get().subscribeBlocks(get().weekStart);
+      get().subscribeChemicals();
     } catch (err) {
       console.error(err);
       set({ authLoading: false });
@@ -251,6 +255,7 @@ export const useAppStore = create((set, get) => ({
   },
 
   goNextWeek() {
+    if (navigator.vibrate) navigator.vibrate(8);
     const { weekStart } = get();
     const next = addWeeks(weekStart, 1);
     set({ weekStart: next, weekDates: getWeekDates(next), selectedDate: next });
@@ -258,6 +263,7 @@ export const useAppStore = create((set, get) => ({
   },
 
   goPrevWeek() {
+    if (navigator.vibrate) navigator.vibrate(8);
     const { weekStart } = get();
     const prev = addWeeks(weekStart, -1);
     set({ weekStart: prev, weekDates: getWeekDates(prev), selectedDate: prev });
@@ -358,6 +364,42 @@ export const useAppStore = create((set, get) => ({
     }
   },
 
+  // ── Chemicals ────────────────────────────────────────────────────────────
+  subscribeChemicals() {
+    return onSnapshot(collection(db, 'chemicals'), snap => {
+      set({ chemicals: snap.docs.map(d => ({ id: d.id, ...d.data() })) });
+    });
+  },
+
+  setChemicalUsage(usage) { set({ chemicalUsage: usage }); },
+
+  async adminSaveChemical({ processType, name, totalCapacity }) {
+    try {
+      await setDoc(doc(db, 'chemicals', processType), {
+        processType, name,
+        totalCapacity: Number(totalCapacity),
+        usedCapacity: 0,
+        changedAt: serverTimestamp(),
+      }, { merge: true });
+      get().showToast('Kit guardado', 'success');
+    } catch (err) {
+      console.error(err);
+      get().showToast('Error al guardar kit', 'error');
+    }
+  },
+
+  async adminResetChemical(processType) {
+    try {
+      await updateDoc(doc(db, 'chemicals', processType), {
+        usedCapacity: 0,
+        changedAt: serverTimestamp(),
+      });
+      get().showToast('Kit marcado como cambiado ✓', 'success');
+    } catch (err) {
+      get().showToast('Error al resetear kit', 'error');
+    }
+  },
+
   subscribeMyBookings() {
     unsub(_unsubMyBookings);
     const { authUser } = get();
@@ -390,7 +432,7 @@ export const useAppStore = create((set, get) => ({
   },
 
   closeBookingModal() {
-    set({ bookingModal: false, selectedSlot: null, bookingLoading: false, bookingSuccess: false, selectedDuration: null });
+    set({ bookingModal: false, selectedSlot: null, bookingLoading: false, bookingSuccess: false, selectedDuration: null, chemicalUsage: null });
   },
 
   setBookingNotes(text) { set({ bookingNotes: text }); },
@@ -498,6 +540,7 @@ export const useAppStore = create((set, get) => ({
       const { resourceId, startMinute } = selectedSlot;
       const docId  = bookingDocId(resourceId, date, startMinute);
       const docRef = doc(db, 'bookings', docId);
+      const { chemicalUsage } = get();
 
       // Conflict check
       const existing = await getDoc(docRef);
@@ -507,7 +550,9 @@ export const useAppStore = create((set, get) => ({
         return;
       }
 
-      await setDoc(docRef, {
+      const batch = writeBatch(db);
+
+      batch.set(docRef, {
         resourceId,
         date,
         startMinute,
@@ -516,9 +561,18 @@ export const useAppStore = create((set, get) => ({
         userName: userDoc?.displayName || authUser.email,
         status:   'confirmed',
         notes:    bookingNotes.trim() || null,
+        chemicalUsage: chemicalUsage || null,
         createdAt: serverTimestamp(),
         notified: false,
       });
+
+      // Increment chemical usage atomically if declared
+      if (chemicalUsage?.processType && chemicalUsage?.rolls > 0) {
+        const chemRef = doc(db, 'chemicals', chemicalUsage.processType);
+        batch.update(chemRef, { usedCapacity: increment(chemicalUsage.rolls) });
+      }
+
+      await batch.commit();
 
       if (navigator.vibrate) navigator.vibrate([10, 50, 20]);
       set({ bookingLoading: false, bookingSuccess: true, syncState: 'ok' });
@@ -555,6 +609,7 @@ export const useAppStore = create((set, get) => ({
   dismissCancelConfirm()          { set({ cancelConfirmId: null }); },
 
   async cancelBooking(bookingId) {
+    if (navigator.vibrate) navigator.vibrate([10, 30, 10, 30]);
     set({ syncState: 'syncing', cancelConfirmId: null });
     try {
       await updateDoc(doc(db, 'bookings', bookingId), { status: 'cancelled' });

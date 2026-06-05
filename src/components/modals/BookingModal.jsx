@@ -4,6 +4,11 @@ import { formatDateFull, formatSlotRange, minutesToTime, getAvailableDurations }
 import { CATEGORY_LABELS } from '../../constants';
 import ResourceIcon from '../shared/ResourceIcon';
 
+const PROCESSES = [
+  { type: 'c41',  label: 'C41' },
+  { type: 'ecn2', label: 'ECN-2' },
+];
+
 export default function BookingModal() {
   const selectedSlot    = useAppStore(s => s.selectedSlot);
   const bookingMode     = useAppStore(s => s.bookingMode);
@@ -11,12 +16,15 @@ export default function BookingModal() {
   const bookingLoading  = useAppStore(s => s.bookingLoading);
   const bookingSuccess  = useAppStore(s => s.bookingSuccess);
   const selectedDuration = useAppStore(s => s.selectedDuration);
+  const chemicalUsage   = useAppStore(s => s.chemicalUsage);
+  const chemicals       = useAppStore(s => s.chemicals);
   const resources       = useAppStore(s => s.resources);
   const schedules       = useAppStore(s => s.schedules);
   const bookings        = useAppStore(s => s.bookings);
   const closeModal      = useAppStore(s => s.closeBookingModal);
   const setNotes        = useAppStore(s => s.setBookingNotes);
   const setDuration     = useAppStore(s => s.setSelectedDuration);
+  const setChemUsage    = useAppStore(s => s.setChemicalUsage);
   const confirmBooking  = useAppStore(s => s.confirmBooking);
   const cancelBooking   = useAppStore(s => s.cancelBooking);
   const updateBooking   = useAppStore(s => s.updateBooking);
@@ -222,6 +230,47 @@ export default function BookingModal() {
                 </div>
               )}
             </>
+          )}
+
+          {/* Chemical usage — film_develop resources only */}
+          {bookingMode === 'book' && resource?.category === 'film_develop' && (
+            <div className="chem-usage-section">
+              <div className="modal-notes-label">¿Qué vas a revelar? <span style={{ color: 'var(--muted)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(opcional)</span></div>
+              <div className="chem-process-selector">
+                {PROCESSES.map(p => {
+                  const kit = chemicals.find(c => c.processType === p.type);
+                  const remaining = kit ? kit.totalCapacity - kit.usedCapacity : null;
+                  const isSelected = chemicalUsage?.processType === p.type;
+                  return (
+                    <button
+                      key={p.type}
+                      type="button"
+                      className={`chem-process-btn ${isSelected ? 'active' : ''}`}
+                      onClick={() => setChemUsage(isSelected ? null : { processType: p.type, rolls: 1 })}
+                    >
+                      <span className="chem-process-name">{p.label}</span>
+                      {remaining !== null && (
+                        <span className="chem-process-remaining" style={{ color: remaining <= 2 ? 'var(--danger)' : 'var(--muted)' }}>
+                          {remaining} restantes
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {chemicalUsage && (
+                <div className="chem-rolls-row">
+                  <span className="config-row-label">Número de carretes</span>
+                  <div className="chem-rolls-counter">
+                    <button type="button" className="chem-counter-btn"
+                      onClick={() => setChemUsage({ ...chemicalUsage, rolls: Math.max(1, chemicalUsage.rolls - 1) })}>−</button>
+                    <span className="chem-counter-val">{chemicalUsage.rolls}</span>
+                    <button type="button" className="chem-counter-btn"
+                      onClick={() => setChemUsage({ ...chemicalUsage, rolls: chemicalUsage.rolls + 1 })}>+</button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Notes — book mode only */}

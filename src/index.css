@@ -35,7 +35,12 @@
 
 /* ── Reset ─────────────────────────────────────────────────────────────── */
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-button { color: inherit; font-family: inherit; font-size: inherit; background: none; border: none; cursor: pointer; }
+button {
+  color: inherit; font-family: inherit; font-size: inherit; background: none; border: none; cursor: pointer;
+  touch-action: manipulation; user-select: none;
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+button:active:not(:disabled) { transform: scale(0.96); opacity: 0.85; }
 
 html { overflow-x: hidden; }
 body {
@@ -46,14 +51,17 @@ body {
   min-height: 100dvh;
   overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   max-width: 100vw;
+  touch-action: manipulation;
+  user-select: none;
 }
 
 #root { min-height: 100vh; min-height: 100dvh; }
 
 button { font-family: inherit; cursor: pointer; border: none; background: none; }
-input, select, textarea { font-family: inherit; }
+input, select, textarea { font-family: inherit; user-select: text; touch-action: auto; }
 a { color: inherit; text-decoration: none; }
 
 /* ── Animations ─────────────────────────────────────────────────────────── */
@@ -66,6 +74,8 @@ a { color: inherit; text-decoration: none; }
 @keyframes checkDraw  { from { stroke-dashoffset: 60; } to { stroke-dashoffset: 0; } }
 @keyframes cardIn     { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes shimmer    { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+@keyframes slideInRight  { from { transform: translateX(32px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes slideInLeft   { from { transform: translateX(-32px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
 /* ── Spinner ─────────────────────────────────────────────────────────────── */
 .spinner {
@@ -144,7 +154,11 @@ a { color: inherit; text-decoration: none; }
   display: flex; flex-direction: column; min-height: 100dvh;
   padding-bottom: 72px;
 }
-.page-scroll { animation: fadeIn 0.2s ease both; }
+.page-scroll { animation: fadeIn 0.18s ease both; }
+.page-transition-wrap { display: contents; }
+.page-transition-wrap[data-dir="right"] > * { animation: slideInRight 0.22s cubic-bezier(0.25,0.46,0.45,0.94) both; }
+.page-transition-wrap[data-dir="left"]  > * { animation: slideInLeft  0.22s cubic-bezier(0.25,0.46,0.45,0.94) both; }
+.page-transition-wrap[data-dir=""]      > * { animation: fadeIn 0.18s ease both; }
 
 /* ── TopBar ──────────────────────────────────────────────────────────────── */
 .topbar {
@@ -584,6 +598,42 @@ a { color: inherit; text-decoration: none; }
 }
 .toast.success { border-color: rgba(57,211,83,0.4); color: var(--success); }
 .toast.error   { border-color: rgba(255,71,71,0.4);  color: var(--danger); }
+
+/* ── Chemicals admin ─────────────────────────────────────────────────────── */
+.chem-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 16px;
+  padding: 16px; margin-bottom: 14px;
+}
+.chem-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.chem-kit-name { font-size: 15px; font-weight: 800; color: var(--text); }
+.chem-changed-at { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.chem-status-label { font-size: 12px; font-weight: 600; }
+.chem-bar-wrap { margin-bottom: 14px; }
+.chem-bar-bg { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+.chem-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+.chem-bar-label { font-size: 12px; font-weight: 700; text-align: right; }
+.chem-config-row { display: flex; justify-content: space-between; align-items: center; }
+
+/* Chemical usage in booking modal */
+.chem-usage-section { margin-bottom: 4px; }
+.chem-process-selector { display: flex; gap: 8px; margin: 8px 0; }
+.chem-process-btn {
+  flex: 1; padding: 10px 8px; border-radius: 12px; border: 1px solid var(--border);
+  background: var(--bg3); display: flex; flex-direction: column; align-items: center; gap: 3px;
+  transition: all 0.15s;
+}
+.chem-process-btn.active { border-color: var(--accent); background: var(--accent-dim); }
+.chem-process-name { font-size: 14px; font-weight: 800; color: var(--text); }
+.chem-process-btn.active .chem-process-name { color: var(--accent); }
+.chem-process-remaining { font-size: 10px; font-weight: 500; }
+.chem-rolls-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.chem-rolls-counter { display: flex; align-items: center; gap: 12px; }
+.chem-counter-btn {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--bg3);
+  border: 1px solid var(--border); font-size: 18px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; color: var(--text);
+}
+.chem-counter-val { font-size: 20px; font-weight: 800; color: var(--accent); min-width: 24px; text-align: center; }
 
 /* ── Admin screen ────────────────────────────────────────────────────────── */
 .admin-shell { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
