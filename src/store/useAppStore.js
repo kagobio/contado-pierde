@@ -464,6 +464,13 @@ export const useAppStore = create((set, get) => ({
     const tarifa = userDoc?.tarifa || 'tarifa1';
     const tarifaLimits = appConfig?.tarifas?.[tarifa] || {};
 
+    // Fixed duration check (tarifa Cliente)
+    const fixedDuration = tarifaLimits.fixedDurationMin > 0 ? Number(tarifaLimits.fixedDurationMin) : null;
+    if (fixedDuration && selectedDuration !== fixedDuration) {
+      get().showToast(`Tu tarifa solo permite reservas de ${fixedDuration / 60}h`, 'error');
+      return;
+    }
+
     // Max advance days check
     const maxAdvanceDays = tarifaLimits.maxAdvanceDays ?? appConfig?.maxAdvanceDays ?? 7;
     const today = new Date();

@@ -29,6 +29,8 @@ export default function BookingModal() {
   const cancelBooking   = useAppStore(s => s.cancelBooking);
   const updateBooking   = useAppStore(s => s.updateBooking);
   const setCurrentPage  = useAppStore(s => s.setCurrentPage);
+  const userDoc         = useAppStore(s => s.userDoc);
+  const appConfig       = useAppStore(s => s.appConfig);
 
   const [editing, setEditing] = useState(false);
 
@@ -38,8 +40,11 @@ export default function BookingModal() {
   const schedule = schedules.find(s => s.id === resource?.scheduleId) || schedules[0];
   const activeSlots = schedule?.slots?.filter(s => s.active) || [];
 
-  const minDuration = resource?.minDurationMin || 60;
-  const maxDuration = resource?.maxDurationMin || 240;
+  const tarifa = userDoc?.tarifa || 'tarifa1';
+  const tarifaLimits = appConfig?.tarifas?.[tarifa] || {};
+  const fixedDuration = tarifaLimits.fixedDurationMin > 0 ? Number(tarifaLimits.fixedDurationMin) : null;
+  const minDuration = fixedDuration || resource?.minDurationMin || 60;
+  const maxDuration = fixedDuration || resource?.maxDurationMin || 240;
 
   // Find existing booking for "mine" mode
   const myBookingDoc = bookingMode === 'view'

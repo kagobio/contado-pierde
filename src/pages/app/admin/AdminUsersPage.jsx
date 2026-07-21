@@ -64,13 +64,13 @@ export default function AdminUsersPage() {
           <input className="login-input" type="email" placeholder="Email" value={form.email}
             onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
           <div className="tarifa-selector">
-            {['tarifa1', 'tarifa2'].map(t => (
+            {['tarifa1', 'tarifa2', 'tarifa3'].map(t => (
               <button
                 key={t} type="button"
                 className={`tarifa-chip ${form.tarifa === t ? 'active' : ''}`}
                 onClick={() => setForm(f => ({ ...f, tarifa: t }))}
               >
-                {appConfig?.tarifas?.[t]?.name || (t === 'tarifa1' ? 'Tarifa 1' : 'Tarifa 2')}
+                {appConfig?.tarifas?.[t]?.name || t}
               </button>
             ))}
           </div>
@@ -120,7 +120,7 @@ export default function AdminUsersPage() {
                 {user.displayName || '—'}
                 <span className={`role-badge ${user.role}`} style={{ marginLeft: 8 }}>{user.role}</span>
                 <span className="tarifa-badge" style={{ marginLeft: 6 }}>
-                  {appConfig?.tarifas?.[user.tarifa || 'tarifa1']?.name || (user.tarifa === 'tarifa2' ? 'Tarifa 2' : 'Tarifa 1')}
+                  {appConfig?.tarifas?.[user.tarifa || 'tarifa1']?.name || user.tarifa || 'Tarifa 1'}
                 </span>
               </div>
               <div className="user-card-email">{user.email}</div>
@@ -141,10 +141,12 @@ export default function AdminUsersPage() {
                 {user.role === 'admin' ? '↓ Quitar admin' : '↑ Hacer admin'}
               </button>
               <button className="user-action-btn"
-                onClick={() => setUserTarifa(user.id, (user.tarifa || 'tarifa1') === 'tarifa1' ? 'tarifa2' : 'tarifa1')}>
-                ⇄ {(user.tarifa || 'tarifa1') === 'tarifa1'
-                  ? `→ ${appConfig?.tarifas?.tarifa2?.name || 'Tarifa 2'}`
-                  : `→ ${appConfig?.tarifas?.tarifa1?.name || 'Tarifa 1'}`}
+                onClick={() => {
+                  const cycle = { tarifa1: 'tarifa2', tarifa2: 'tarifa3', tarifa3: 'tarifa1' };
+                  const next = cycle[user.tarifa || 'tarifa1'] || 'tarifa2';
+                  setUserTarifa(user.id, next);
+                }}>
+                ⇄ → {appConfig?.tarifas?.[(({ tarifa1: 'tarifa2', tarifa2: 'tarifa3', tarifa3: 'tarifa1' })[user.tarifa || 'tarifa1'])]?.name || 'siguiente'}
               </button>
               <button className="user-action-btn"
                 onClick={() => adminResetPassword(user.email)}>
