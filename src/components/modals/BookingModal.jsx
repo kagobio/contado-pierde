@@ -66,10 +66,14 @@ export default function BookingModal() {
     maxDuration
   );
 
-  // Auto-select first available duration on open (book mode) or current duration on edit
+  // Auto-select first available duration; clear if no durations available
   useEffect(() => {
-    if (bookingMode === 'book' && !selectedDuration && availableDurations.length > 0) {
-      setDuration(availableDurations[0].durationMin);
+    if (bookingMode === 'book') {
+      if (availableDurations.length > 0) {
+        if (!selectedDuration) setDuration(availableDurations[0].durationMin);
+      } else {
+        setDuration(null);
+      }
     }
   }, [availableDurations.length, bookingMode]);
 
@@ -170,9 +174,11 @@ export default function BookingModal() {
             <div>
               <div className="modal-notes-label" style={{ marginBottom: 8 }}>
                 Duración
-                <span style={{ color: 'var(--muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', letterSpacing: 0 }}>
-                  (mín {resource?.minDurationMin / 60}h – máx {resource?.maxDurationMin / 60}h)
-                </span>
+                {Number.isFinite(minDuration / 60) && Number.isFinite(maxDuration / 60) && (
+                  <span style={{ color: 'var(--muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', letterSpacing: 0 }}>
+                    (mín {minDuration / 60}h – máx {maxDuration / 60}h)
+                  </span>
+                )}
               </div>
 
               {availableDurations.length === 0 ? (

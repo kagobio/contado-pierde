@@ -366,9 +366,11 @@ export const useAppStore = create((set, get) => ({
 
   // ── Chemicals ────────────────────────────────────────────────────────────
   subscribeChemicals() {
-    return onSnapshot(collection(db, 'chemicals'), snap => {
-      set({ chemicals: snap.docs.map(d => ({ id: d.id, ...d.data() })) });
-    });
+    return onSnapshot(
+      collection(db, 'chemicals'),
+      snap => { set({ chemicals: snap.docs.map(d => ({ id: d.id, ...d.data() })) }); },
+      err => { if (err.code !== 'permission-denied') console.error('subscribeChemicals:', err); }
+    );
   },
 
   setChemicalUsage(usage) { set({ chemicalUsage: usage }); },
@@ -550,9 +552,7 @@ export const useAppStore = create((set, get) => ({
         return;
       }
 
-      const batch = writeBatch(db);
-
-      batch.set(docRef, {
+      await setDoc(docRef, {
         resourceId,
         date,
         startMinute,
@@ -566,13 +566,12 @@ export const useAppStore = create((set, get) => ({
         notified: false,
       });
 
-      // Increment chemical usage atomically if declared
+      // Increment chemical usage separately (non-blocking — requires Firestore rules)
       if (chemicalUsage?.processType && chemicalUsage?.rolls > 0) {
         const chemRef = doc(db, 'chemicals', chemicalUsage.processType);
-        batch.update(chemRef, { usedCapacity: increment(chemicalUsage.rolls) });
+        setDoc(chemRef, { usedCapacity: increment(chemicalUsage.rolls) }, { merge: true })
+          .catch(err => console.warn('Chemical update skipped (check Firestore rules):', err));
       }
-
-      await batch.commit();
 
       if (navigator.vibrate) navigator.vibrate([10, 50, 20]);
       set({ bookingLoading: false, bookingSuccess: true, syncState: 'ok' });

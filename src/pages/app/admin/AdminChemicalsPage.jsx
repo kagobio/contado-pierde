@@ -72,7 +72,7 @@ export default function AdminChemicalsPage() {
             {/* Progress bar */}
             <div className="chem-bar-wrap">
               <div className="chem-bar-bg">
-                <div className="chem-bar-fill" style={{ width: `${pct * 100}%`, background: color }} />
+                <div className="chem-bar-fill" style={{ transform: `scaleX(${pct})`, background: color }} />
               </div>
               <div className="chem-bar-label" style={{ color }}>
                 {used} / {total} carretes
