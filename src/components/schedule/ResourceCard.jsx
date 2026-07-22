@@ -42,7 +42,7 @@ export default function ResourceCard({ resource, date, index = 0 }) {
   return (
     <div
       className="resource-card"
-      style={{ '--card-accent': accent, animationDelay: `${index * 40}ms` }}
+      style={{ animationDelay: `${index * 40}ms` }}
     >
       <button className="resource-card-header" onClick={handleClick}>
         <div className="resource-icon" style={{ background: `${accent}18` }}>
