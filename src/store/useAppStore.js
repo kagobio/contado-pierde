@@ -870,7 +870,7 @@ export const useAppStore = create((set, get) => ({
   async adminSaveConfig(fields) {
     set({ syncState: 'syncing' });
     try {
-      await updateDoc(doc(db, 'config', 'app'), fields);
+      await setDoc(doc(db, 'config', 'app'), fields, { merge: true });
       set({ syncState: 'ok' });
       get().showToast('Configuración guardada', 'success');
     } catch (err) {

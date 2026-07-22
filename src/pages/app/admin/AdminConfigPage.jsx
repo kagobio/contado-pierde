@@ -105,8 +105,13 @@ export default function AdminConfigPage() {
   if (!appConfig) {
     return (
       <div className="admin-content">
-        <div style={{ textAlign: 'center', padding: 32, color: 'var(--muted)' }}>
-          Sin configuración. Usa el botón "Cargar datos iniciales" en Recursos.
+        <div style={{ textAlign: 'center', padding: 32 }}>
+          <div style={{ color: 'var(--muted)', marginBottom: 16, fontSize: 14 }}>
+            No hay configuración todavía.
+          </div>
+          <button className="btn-primary" disabled={saving} onClick={async () => { setSaving(true); await handleSave(); setSaving(false); }}>
+            {saving ? <><span className="spinner sm" /> Creando…</> : 'Crear configuración inicial'}
+          </button>
         </div>
       </div>
     );
