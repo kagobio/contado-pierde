@@ -74,7 +74,7 @@ export default function ResourceCard({ resource, date, index = 0 }) {
           {total > 0 && (
             <div className="occupancy-bar-wrap">
               <div className="occupancy-bar">
-                <div className="occupancy-bar-fill" style={{ width: `${occupancyPct}%` }} />
+                <div className="occupancy-bar-fill" style={{ transform: `scaleX(${occupancyPct / 100})` }} />
               </div>
               <span className="occupancy-bar-label">{occupiedCount}/{total} ocupadas</span>
             </div>

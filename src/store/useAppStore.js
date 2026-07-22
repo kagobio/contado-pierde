@@ -137,6 +137,16 @@ export const useAppStore = create((set, get) => ({
         return;
       }
 
+      if (userDoc.expiresAt) {
+        const expiresDate = userDoc.expiresAt.toDate ? userDoc.expiresAt.toDate() : new Date(userDoc.expiresAt);
+        if (expiresDate < new Date()) {
+          await signOut(auth);
+          set({ authUser: null, userDoc: null, screen: 'login', authLoading: false });
+          get().showToast('Tu acceso ha caducado. Contacta con el administrador.', 'error');
+          return;
+        }
+      }
+
       const screen = userDoc.mustChangePassword ? 'changepassword' : 'app';
       set({ userDoc, authLoading: false, screen });
 
@@ -177,16 +187,23 @@ export const useAppStore = create((set, get) => ({
     }
   },
 
-  async adminCreateUser({ displayName, email, password, tarifa = 'tarifa1' }) {
+  async adminCreateUser({ displayName, email, tarifa = 'tarifa1' }) {
     const USER_COLORS = [
       '#FF6B35','#FF4757','#2ED573','#3498DB','#9B59B6',
       '#F39C12','#1ABC9C','#E91E8C','#00BCD4','#8BC34A',
     ];
+    // Random password — user will set their own via the invitation email
+    const tempPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10).toUpperCase();
     set({ syncState: 'syncing' });
     try {
       const { adminUsers } = get();
       const color = USER_COLORS[adminUsers.length % USER_COLORS.length];
-      const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+      const cred = await createUserWithEmailAndPassword(secondaryAuth, email, tempPassword);
+      const tarifaConfig = get().appConfig?.tarifas?.[tarifa] || {};
+      const accessDays = tarifaConfig.accessDurationDays > 0 ? Number(tarifaConfig.accessDurationDays) : 0;
+      const expiresAt = accessDays > 0
+        ? new Date(Date.now() + accessDays * 24 * 60 * 60 * 1000)
+        : null;
       await setDoc(doc(db, 'users', cred.user.uid), {
         displayName: displayName.trim(),
         email,
@@ -195,9 +212,12 @@ export const useAppStore = create((set, get) => ({
         tarifa,
         mustChangePassword: true,
         createdAt: serverTimestamp(),
+        ...(expiresAt && { expiresAt }),
       });
       await fbSignOut(secondaryAuth);
-      get().showToast(`Usuario ${displayName} creado`, 'success');
+      // Send invitation email — user clicks link to set their own password
+      await sendPasswordResetEmail(auth, email);
+      get().showToast(`Invitación enviada a ${email}`, 'success');
       get().loadAdminUsers();
       set({ syncState: 'ok' });
     } catch (err) {
@@ -213,6 +233,20 @@ export const useAppStore = create((set, get) => ({
 
   async adminSetUserColor(uid, color) {
     await updateDoc(doc(db, 'users', uid), { color });
+    get().loadAdminUsers();
+  },
+
+  async adminRenewAccess(uid, displayName) {
+    const { appConfig, adminUsers } = get();
+    const user = adminUsers.find(u => u.id === uid);
+    const tarifa = user?.tarifa || 'tarifa1';
+    const accessDays = appConfig?.tarifas?.[tarifa]?.accessDurationDays > 0
+      ? Number(appConfig.tarifas[tarifa].accessDurationDays)
+      : 30;
+    const from = user?.expiresAt && user.expiresAt > new Date() ? user.expiresAt : new Date();
+    const newExpiry = new Date(from.getTime() + accessDays * 24 * 60 * 60 * 1000);
+    await updateDoc(doc(db, 'users', uid), { expiresAt: newExpiry });
+    get().showToast(`Acceso de ${displayName} renovado hasta ${newExpiry.toLocaleDateString('es-ES')}`, 'success');
     get().loadAdminUsers();
   },
 
@@ -366,9 +400,11 @@ export const useAppStore = create((set, get) => ({
 
   // ── Chemicals ────────────────────────────────────────────────────────────
   subscribeChemicals() {
-    return onSnapshot(collection(db, 'chemicals'), snap => {
-      set({ chemicals: snap.docs.map(d => ({ id: d.id, ...d.data() })) });
-    });
+    return onSnapshot(
+      collection(db, 'chemicals'),
+      snap => { set({ chemicals: snap.docs.map(d => ({ id: d.id, ...d.data() })) }); },
+      err => { if (err.code !== 'permission-denied') console.error('subscribeChemicals:', err); }
+    );
   },
 
   setChemicalUsage(usage) { set({ chemicalUsage: usage }); },
@@ -462,6 +498,13 @@ export const useAppStore = create((set, get) => ({
     const tarifa = userDoc?.tarifa || 'tarifa1';
     const tarifaLimits = appConfig?.tarifas?.[tarifa] || {};
 
+    // Fixed duration check (tarifa Cliente)
+    const fixedDuration = tarifaLimits.fixedDurationMin > 0 ? Number(tarifaLimits.fixedDurationMin) : null;
+    if (fixedDuration && selectedDuration !== fixedDuration) {
+      get().showToast(`Tu tarifa solo permite reservas de ${fixedDuration / 60}h`, 'error');
+      return;
+    }
+
     // Max advance days check
     const maxAdvanceDays = tarifaLimits.maxAdvanceDays ?? appConfig?.maxAdvanceDays ?? 7;
     const today = new Date();
@@ -550,9 +593,7 @@ export const useAppStore = create((set, get) => ({
         return;
       }
 
-      const batch = writeBatch(db);
-
-      batch.set(docRef, {
+      await setDoc(docRef, {
         resourceId,
         date,
         startMinute,
@@ -566,13 +607,12 @@ export const useAppStore = create((set, get) => ({
         notified: false,
       });
 
-      // Increment chemical usage atomically if declared
+      // Increment chemical usage separately (non-blocking — requires Firestore rules)
       if (chemicalUsage?.processType && chemicalUsage?.rolls > 0) {
         const chemRef = doc(db, 'chemicals', chemicalUsage.processType);
-        batch.update(chemRef, { usedCapacity: increment(chemicalUsage.rolls) });
+        setDoc(chemRef, { usedCapacity: increment(chemicalUsage.rolls) }, { merge: true })
+          .catch(err => console.warn('Chemical update skipped (check Firestore rules):', err));
       }
-
-      await batch.commit();
 
       if (navigator.vibrate) navigator.vibrate([10, 50, 20]);
       set({ bookingLoading: false, bookingSuccess: true, syncState: 'ok' });
@@ -765,7 +805,13 @@ export const useAppStore = create((set, get) => ({
     set({ adminLoading: true });
     try {
       const snap = await getDocs(collection(db, 'users'));
-      const adminUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const adminUsers = snap.docs.map(d => {
+        const data = d.data();
+        return {
+          id: d.id, ...data,
+          expiresAt: data.expiresAt?.toDate ? data.expiresAt.toDate() : (data.expiresAt ? new Date(data.expiresAt) : null),
+        };
+      });
       set({ adminUsers, adminLoading: false });
     } catch {
       get().showToast('Error al cargar usuarios', 'error');

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '../../../store/useAppStore';
 
-const DEFAULT_TARIFA = { name: '', maxBookingsPerUserPerDay: 2, maxAdvanceDays: 7, maxHoursPerUserPerWeek: 0 };
+const DEFAULT_TARIFA = { name: '', maxBookingsPerUserPerDay: 2, maxAdvanceDays: 7, maxHoursPerUserPerWeek: 0, fixedDurationMin: 0, accessDurationDays: 0 };
 
 function TarifaForm({ label, value, onChange }) {
   return (
@@ -12,7 +12,7 @@ function TarifaForm({ label, value, onChange }) {
           <label className="config-row-label">Nombre visible</label>
           <input
             className="config-name-input"
-            placeholder="Ej: Socio, Externo…"
+            placeholder="Ej: Socio, Cliente…"
             value={value.name}
             onChange={e => onChange({ ...value, name: e.target.value })}
             maxLength={30}
@@ -36,6 +36,18 @@ function TarifaForm({ label, value, onChange }) {
             value={value.maxHoursPerUserPerWeek}
             onChange={e => onChange({ ...value, maxHoursPerUserPerWeek: e.target.value })} />
         </div>
+        <div className="config-input-row">
+          <label className="config-row-label">Duración fija <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(min, 0 = libre)</span></label>
+          <input type="number" min="0" max="480" step="30" className="config-num-input"
+            value={value.fixedDurationMin ?? 0}
+            onChange={e => onChange({ ...value, fixedDurationMin: e.target.value })} />
+        </div>
+        <div className="config-input-row">
+          <label className="config-row-label">Días de acceso <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(0 = sin caducidad)</span></label>
+          <input type="number" min="0" max="365" className="config-num-input"
+            value={value.accessDurationDays ?? 0}
+            onChange={e => onChange({ ...value, accessDurationDays: e.target.value })} />
+        </div>
       </div>
     </div>
   );
@@ -48,8 +60,9 @@ export default function AdminConfigPage() {
   const [maintenance,  setMaintenance]  = useState(false);
   const [announcement, setAnnouncement] = useState('');
   const [cancelHours,  setCancelHours]  = useState(2);
-  const [tarifa1, setTarifa1] = useState({ ...DEFAULT_TARIFA, name: 'Tarifa 1' });
-  const [tarifa2, setTarifa2] = useState({ ...DEFAULT_TARIFA, name: 'Tarifa 2', maxBookingsPerUserPerDay: 3, maxAdvanceDays: 14, maxHoursPerUserPerWeek: 0 });
+  const [tarifa1, setTarifa1] = useState({ ...DEFAULT_TARIFA, name: 'Socio' });
+  const [tarifa2, setTarifa2] = useState({ ...DEFAULT_TARIFA, name: 'Socio Plus', maxBookingsPerUserPerDay: 3, maxAdvanceDays: 14 });
+  const [tarifa3, setTarifa3] = useState({ ...DEFAULT_TARIFA, name: 'Cliente', maxBookingsPerUserPerDay: 1, maxAdvanceDays: 14, fixedDurationMin: 180, accessDurationDays: 30 });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -59,6 +72,7 @@ export default function AdminConfigPage() {
       setCancelHours(appConfig.cancellationDeadlineHours ?? 2);
       if (appConfig.tarifas?.tarifa1) setTarifa1(appConfig.tarifas.tarifa1);
       if (appConfig.tarifas?.tarifa2) setTarifa2(appConfig.tarifas.tarifa2);
+      if (appConfig.tarifas?.tarifa3) setTarifa3(appConfig.tarifas.tarifa3);
     }
   }, [appConfig]);
 
@@ -68,6 +82,8 @@ export default function AdminConfigPage() {
       maxBookingsPerUserPerDay: Number(t.maxBookingsPerUserPerDay),
       maxAdvanceDays:           Number(t.maxAdvanceDays),
       maxHoursPerUserPerWeek:   Number(t.maxHoursPerUserPerWeek),
+      fixedDurationMin:         Number(t.fixedDurationMin ?? 0),
+      accessDurationDays:       Number(t.accessDurationDays ?? 0),
     };
   }
 
@@ -80,6 +96,7 @@ export default function AdminConfigPage() {
       tarifas: {
         tarifa1: toNum(tarifa1),
         tarifa2: toNum(tarifa2),
+        tarifa3: toNum(tarifa3),
       },
     });
     setSaving(false);
@@ -143,11 +160,9 @@ export default function AdminConfigPage() {
         </div>
       </div>
 
-      {/* Tarifa 1 */}
-      <TarifaForm label="Tarifa 1 — Límites" value={tarifa1} onChange={setTarifa1} />
-
-      {/* Tarifa 2 */}
-      <TarifaForm label="Tarifa 2 — Límites" value={tarifa2} onChange={setTarifa2} />
+      <TarifaForm label="Tarifa 1 — Socio" value={tarifa1} onChange={setTarifa1} />
+      <TarifaForm label="Tarifa 2 — Socio Plus" value={tarifa2} onChange={setTarifa2} />
+      <TarifaForm label="Tarifa 3 — Cliente puntual" value={tarifa3} onChange={setTarifa3} />
 
       <button className="btn-primary" onClick={handleSave} disabled={saving} style={{ marginTop: 8 }}>
         {saving ? <><span className="spinner sm" /> Guardando…</> : 'Guardar configuración'}

@@ -74,7 +74,7 @@ export default function AdminStatsPage() {
                 <div className="stats-bar-track">
                   <div
                     className="stats-bar-fill"
-                    style={{ width: `${(count / maxCount) * 100}%` }}
+                    style={{ transform: `scaleX(${count / maxCount})` }}
                   />
                 </div>
                 <div className="stats-bar-count">{count}</div>

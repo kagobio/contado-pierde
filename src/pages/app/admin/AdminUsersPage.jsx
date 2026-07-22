@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from '../../../store/useAppStore';
 
-const DEFAULT_PASSWORD = 'Contado2025!';
-
 export default function AdminUsersPage() {
   const adminUsers         = useAppStore(s => s.adminUsers);
   const adminLoading       = useAppStore(s => s.adminLoading);
@@ -16,9 +14,11 @@ export default function AdminUsersPage() {
   const adminDisableUser   = useAppStore(s => s.adminDisableUser);
   const adminEnableUser    = useAppStore(s => s.adminEnableUser);
   const adminDeleteUser    = useAppStore(s => s.adminDeleteUser);
+  const adminRenewAccess   = useAppStore(s => s.adminRenewAccess);
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm]         = useState({ displayName: '', email: '', tarifa: 'tarifa1' });
+
   const [creating, setCreating] = useState(false);
   const [created, setCreated]   = useState(null);
 
@@ -35,9 +35,9 @@ export default function AdminUsersPage() {
     if (!form.displayName.trim() || !form.email.trim()) return;
     setCreating(true);
     try {
-      await adminCreateUser({ ...form, password: DEFAULT_PASSWORD, tarifa: form.tarifa });
-      setCreated({ ...form, password: DEFAULT_PASSWORD });
-      setForm({ displayName: '', email: '' });
+      await adminCreateUser({ displayName: form.displayName, email: form.email, tarifa: form.tarifa });
+      setCreated({ ...form });
+      setForm({ displayName: '', email: '', tarifa: 'tarifa1' });
     } catch {
       // shown via toast
     } finally {
@@ -64,18 +64,18 @@ export default function AdminUsersPage() {
           <input className="login-input" type="email" placeholder="Email" value={form.email}
             onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
           <div className="tarifa-selector">
-            {['tarifa1', 'tarifa2'].map(t => (
+            {['tarifa1', 'tarifa2', 'tarifa3'].map(t => (
               <button
                 key={t} type="button"
                 className={`tarifa-chip ${form.tarifa === t ? 'active' : ''}`}
                 onClick={() => setForm(f => ({ ...f, tarifa: t }))}
               >
-                {appConfig?.tarifas?.[t]?.name || (t === 'tarifa1' ? 'Tarifa 1' : 'Tarifa 2')}
+                {appConfig?.tarifas?.[t]?.name || t}
               </button>
             ))}
           </div>
           <div style={{ fontSize: 12, color: 'var(--muted)', padding: '2px 0' }}>
-            Contraseña por defecto: <strong style={{ color: 'var(--text)' }}>{DEFAULT_PASSWORD}</strong>
+            Recibirá un email para activar su cuenta.
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn-primary" type="submit" disabled={creating} style={{ flex: 1 }}>
@@ -89,14 +89,12 @@ export default function AdminUsersPage() {
       {/* Success */}
       {created && (
         <div className="create-user-success">
-          <div style={{ fontWeight: 800, color: 'var(--success)', marginBottom: 8 }}>✓ Usuario creado</div>
-          <div style={{ fontSize: 13, marginBottom: 8 }}>Comparte estos datos con <strong>{created.displayName}</strong>:</div>
-          <div className="credentials-box">
-            <div><span style={{ color: 'var(--muted)' }}>Email</span><br /><strong>{created.email}</strong></div>
-            <div style={{ marginTop: 8 }}><span style={{ color: 'var(--muted)' }}>Contraseña</span><br /><strong>{created.password}</strong></div>
+          <div style={{ fontWeight: 800, color: 'var(--success)', marginBottom: 8 }}>✓ Invitación enviada</div>
+          <div style={{ fontSize: 13, marginBottom: 12, lineHeight: 1.5 }}>
+            <strong>{created.displayName}</strong> recibirá un email en <strong>{created.email}</strong> con un enlace para establecer su contraseña y acceder a la app.
           </div>
-          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
-            Se le pedirá cambiarla en el primer inicio de sesión.
+          <div style={{ fontSize: 11, color: 'var(--muted)', background: 'var(--bg3)', borderRadius: 10, padding: '10px 12px', lineHeight: 1.6 }}>
+            Si no le llega, revisa la carpeta de spam o usa "Reset contraseña" desde su perfil.
           </div>
           <button className="btn-ghost" style={{ marginTop: 10 }} onClick={resetForm}>Cerrar</button>
         </div>
@@ -120,10 +118,20 @@ export default function AdminUsersPage() {
                 {user.displayName || '—'}
                 <span className={`role-badge ${user.role}`} style={{ marginLeft: 8 }}>{user.role}</span>
                 <span className="tarifa-badge" style={{ marginLeft: 6 }}>
-                  {appConfig?.tarifas?.[user.tarifa || 'tarifa1']?.name || (user.tarifa === 'tarifa2' ? 'Tarifa 2' : 'Tarifa 1')}
+                  {appConfig?.tarifas?.[user.tarifa || 'tarifa1']?.name || user.tarifa || 'Tarifa 1'}
                 </span>
               </div>
               <div className="user-card-email">{user.email}</div>
+              {user.expiresAt && (() => {
+                const now = new Date();
+                const expired = user.expiresAt < now;
+                const soonMs = 7 * 24 * 60 * 60 * 1000;
+                const expiringSoon = !expired && (user.expiresAt - now) < soonMs;
+                const label = user.expiresAt.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+                if (expired) return <div className="user-card-tag danger">Acceso caducado el {label}</div>;
+                if (expiringSoon) return <div className="user-card-tag warning">Caduca el {label}</div>;
+                return <div className="user-card-tag">Acceso hasta {label}</div>;
+              })()}
               {user.mustChangePassword && !user.disabled && (
                 <div className="user-card-tag warning">Pendiente de cambiar contraseña</div>
               )}
@@ -141,11 +149,19 @@ export default function AdminUsersPage() {
                 {user.role === 'admin' ? '↓ Quitar admin' : '↑ Hacer admin'}
               </button>
               <button className="user-action-btn"
-                onClick={() => setUserTarifa(user.id, (user.tarifa || 'tarifa1') === 'tarifa1' ? 'tarifa2' : 'tarifa1')}>
-                ⇄ {(user.tarifa || 'tarifa1') === 'tarifa1'
-                  ? `→ ${appConfig?.tarifas?.tarifa2?.name || 'Tarifa 2'}`
-                  : `→ ${appConfig?.tarifas?.tarifa1?.name || 'Tarifa 1'}`}
+                onClick={() => {
+                  const cycle = { tarifa1: 'tarifa2', tarifa2: 'tarifa3', tarifa3: 'tarifa1' };
+                  const next = cycle[user.tarifa || 'tarifa1'] || 'tarifa2';
+                  setUserTarifa(user.id, next);
+                }}>
+                ⇄ → {appConfig?.tarifas?.[(({ tarifa1: 'tarifa2', tarifa2: 'tarifa3', tarifa3: 'tarifa1' })[user.tarifa || 'tarifa1'])]?.name || 'siguiente'}
               </button>
+              {user.expiresAt && (
+                <button className="user-action-btn success"
+                  onClick={() => adminRenewAccess(user.id, user.displayName)}>
+                  ↻ Renovar acceso
+                </button>
+              )}
               <button className="user-action-btn"
                 onClick={() => adminResetPassword(user.email)}>
                 ✉ Reset contraseña
