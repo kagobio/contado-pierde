@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '../../../store/useAppStore';
 
-const DEFAULT_TARIFA = { name: '', maxBookingsPerUserPerDay: 2, maxAdvanceDays: 7, maxHoursPerUserPerWeek: 0, fixedDurationMin: 0 };
+const DEFAULT_TARIFA = { name: '', maxBookingsPerUserPerDay: 2, maxAdvanceDays: 7, maxHoursPerUserPerWeek: 0, fixedDurationMin: 0, accessDurationDays: 0 };
 
 function TarifaForm({ label, value, onChange }) {
   return (
@@ -42,6 +42,12 @@ function TarifaForm({ label, value, onChange }) {
             value={value.fixedDurationMin ?? 0}
             onChange={e => onChange({ ...value, fixedDurationMin: e.target.value })} />
         </div>
+        <div className="config-input-row">
+          <label className="config-row-label">Días de acceso <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(0 = sin caducidad)</span></label>
+          <input type="number" min="0" max="365" className="config-num-input"
+            value={value.accessDurationDays ?? 0}
+            onChange={e => onChange({ ...value, accessDurationDays: e.target.value })} />
+        </div>
       </div>
     </div>
   );
@@ -56,7 +62,7 @@ export default function AdminConfigPage() {
   const [cancelHours,  setCancelHours]  = useState(2);
   const [tarifa1, setTarifa1] = useState({ ...DEFAULT_TARIFA, name: 'Socio' });
   const [tarifa2, setTarifa2] = useState({ ...DEFAULT_TARIFA, name: 'Socio Plus', maxBookingsPerUserPerDay: 3, maxAdvanceDays: 14 });
-  const [tarifa3, setTarifa3] = useState({ ...DEFAULT_TARIFA, name: 'Cliente', maxBookingsPerUserPerDay: 1, maxAdvanceDays: 14, fixedDurationMin: 180 });
+  const [tarifa3, setTarifa3] = useState({ ...DEFAULT_TARIFA, name: 'Cliente', maxBookingsPerUserPerDay: 1, maxAdvanceDays: 14, fixedDurationMin: 180, accessDurationDays: 30 });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -77,6 +83,7 @@ export default function AdminConfigPage() {
       maxAdvanceDays:           Number(t.maxAdvanceDays),
       maxHoursPerUserPerWeek:   Number(t.maxHoursPerUserPerWeek),
       fixedDurationMin:         Number(t.fixedDurationMin ?? 0),
+      accessDurationDays:       Number(t.accessDurationDays ?? 0),
     };
   }
 

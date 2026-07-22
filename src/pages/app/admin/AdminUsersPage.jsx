@@ -14,6 +14,7 @@ export default function AdminUsersPage() {
   const adminDisableUser   = useAppStore(s => s.adminDisableUser);
   const adminEnableUser    = useAppStore(s => s.adminEnableUser);
   const adminDeleteUser    = useAppStore(s => s.adminDeleteUser);
+  const adminRenewAccess   = useAppStore(s => s.adminRenewAccess);
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm]         = useState({ displayName: '', email: '', tarifa: 'tarifa1' });
@@ -74,7 +75,7 @@ export default function AdminUsersPage() {
             ))}
           </div>
           <div style={{ fontSize: 12, color: 'var(--muted)', padding: '2px 0' }}>
-            Contraseña por defecto: <strong style={{ color: 'var(--text)' }}>{DEFAULT_PASSWORD}</strong>
+            Recibirá un email para activar su cuenta.
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn-primary" type="submit" disabled={creating} style={{ flex: 1 }}>
@@ -121,6 +122,16 @@ export default function AdminUsersPage() {
                 </span>
               </div>
               <div className="user-card-email">{user.email}</div>
+              {user.expiresAt && (() => {
+                const now = new Date();
+                const expired = user.expiresAt < now;
+                const soonMs = 7 * 24 * 60 * 60 * 1000;
+                const expiringSoon = !expired && (user.expiresAt - now) < soonMs;
+                const label = user.expiresAt.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+                if (expired) return <div className="user-card-tag danger">Acceso caducado el {label}</div>;
+                if (expiringSoon) return <div className="user-card-tag warning">Caduca el {label}</div>;
+                return <div className="user-card-tag">Acceso hasta {label}</div>;
+              })()}
               {user.mustChangePassword && !user.disabled && (
                 <div className="user-card-tag warning">Pendiente de cambiar contraseña</div>
               )}
@@ -145,6 +156,12 @@ export default function AdminUsersPage() {
                 }}>
                 ⇄ → {appConfig?.tarifas?.[(({ tarifa1: 'tarifa2', tarifa2: 'tarifa3', tarifa3: 'tarifa1' })[user.tarifa || 'tarifa1'])]?.name || 'siguiente'}
               </button>
+              {user.expiresAt && (
+                <button className="user-action-btn success"
+                  onClick={() => adminRenewAccess(user.id, user.displayName)}>
+                  ↻ Renovar acceso
+                </button>
+              )}
               <button className="user-action-btn"
                 onClick={() => adminResetPassword(user.email)}>
                 ✉ Reset contraseña

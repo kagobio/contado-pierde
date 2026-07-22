@@ -137,6 +137,16 @@ export const useAppStore = create((set, get) => ({
         return;
       }
 
+      if (userDoc.expiresAt) {
+        const expiresDate = userDoc.expiresAt.toDate ? userDoc.expiresAt.toDate() : new Date(userDoc.expiresAt);
+        if (expiresDate < new Date()) {
+          await signOut(auth);
+          set({ authUser: null, userDoc: null, screen: 'login', authLoading: false });
+          get().showToast('Tu acceso ha caducado. Contacta con el administrador.', 'error');
+          return;
+        }
+      }
+
       const screen = userDoc.mustChangePassword ? 'changepassword' : 'app';
       set({ userDoc, authLoading: false, screen });
 
@@ -189,6 +199,11 @@ export const useAppStore = create((set, get) => ({
       const { adminUsers } = get();
       const color = USER_COLORS[adminUsers.length % USER_COLORS.length];
       const cred = await createUserWithEmailAndPassword(secondaryAuth, email, tempPassword);
+      const tarifaConfig = get().appConfig?.tarifas?.[tarifa] || {};
+      const accessDays = tarifaConfig.accessDurationDays > 0 ? Number(tarifaConfig.accessDurationDays) : 0;
+      const expiresAt = accessDays > 0
+        ? new Date(Date.now() + accessDays * 24 * 60 * 60 * 1000)
+        : null;
       await setDoc(doc(db, 'users', cred.user.uid), {
         displayName: displayName.trim(),
         email,
@@ -197,6 +212,7 @@ export const useAppStore = create((set, get) => ({
         tarifa,
         mustChangePassword: true,
         createdAt: serverTimestamp(),
+        ...(expiresAt && { expiresAt }),
       });
       await fbSignOut(secondaryAuth);
       // Send invitation email — user clicks link to set their own password
@@ -217,6 +233,20 @@ export const useAppStore = create((set, get) => ({
 
   async adminSetUserColor(uid, color) {
     await updateDoc(doc(db, 'users', uid), { color });
+    get().loadAdminUsers();
+  },
+
+  async adminRenewAccess(uid, displayName) {
+    const { appConfig, adminUsers } = get();
+    const user = adminUsers.find(u => u.id === uid);
+    const tarifa = user?.tarifa || 'tarifa1';
+    const accessDays = appConfig?.tarifas?.[tarifa]?.accessDurationDays > 0
+      ? Number(appConfig.tarifas[tarifa].accessDurationDays)
+      : 30;
+    const from = user?.expiresAt && user.expiresAt > new Date() ? user.expiresAt : new Date();
+    const newExpiry = new Date(from.getTime() + accessDays * 24 * 60 * 60 * 1000);
+    await updateDoc(doc(db, 'users', uid), { expiresAt: newExpiry });
+    get().showToast(`Acceso de ${displayName} renovado hasta ${newExpiry.toLocaleDateString('es-ES')}`, 'success');
     get().loadAdminUsers();
   },
 
@@ -775,7 +805,13 @@ export const useAppStore = create((set, get) => ({
     set({ adminLoading: true });
     try {
       const snap = await getDocs(collection(db, 'users'));
-      const adminUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const adminUsers = snap.docs.map(d => {
+        const data = d.data();
+        return {
+          id: d.id, ...data,
+          expiresAt: data.expiresAt?.toDate ? data.expiresAt.toDate() : (data.expiresAt ? new Date(data.expiresAt) : null),
+        };
+      });
       set({ adminUsers, adminLoading: false });
     } catch {
       get().showToast('Error al cargar usuarios', 'error');
