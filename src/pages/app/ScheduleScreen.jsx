@@ -63,34 +63,17 @@ export default function ScheduleScreen() {
   }
 
   return (
-    <div
-      className="page-scroll ptr-container"
-      ref={scrollRef}
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-      style={{ paddingTop: pulling > 0 ? pulling : undefined }}
-    >
-      {/* Pull-to-refresh indicator */}
-      {(pulling > 0 || refreshing) && (
-        <div className="ptr-indicator" style={{ opacity: refreshing ? 1 : pulling / PTR_THRESHOLD }}>
-          {refreshing
-            ? <div className="spinner" style={{ width: 20, height: 20 }} />
-            : <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ transform: `rotate(${Math.min(pulling / PTR_THRESHOLD, 1) * 180}deg)`, transition: 'transform 0.1s' }}><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-          }
-        </div>
-      )}
+    <div className="schedule-screen">
 
+      {/* Banners */}
       {appConfig?.announcementText && (
         <div className="announcement-banner">{appConfig.announcementText}</div>
       )}
-
       {appConfig?.maintenanceMode && (
         <div className="maintenance-banner">
           🔧 El laboratorio está en mantenimiento. No se pueden realizar nuevas reservas.
         </div>
       )}
-
       {showReminder && (
         <div className="reminder-banner">
           <span className="reminder-banner-icon">🔔</span>
@@ -98,14 +81,36 @@ export default function ScheduleScreen() {
         </div>
       )}
 
-      <WeekStrip />
-      <CategoryFilter />
-
-      <div className={`date-heading ${isToday ? 'today' : ''}`}>
-        {dateLabel}
+      {/* Sticky header: week nav + category filter */}
+      <div className="schedule-sticky">
+        <WeekStrip />
+        <CategoryFilter />
       </div>
 
-      <ResourceGrid date={selectedDate} />
+      {/* Scrollable content */}
+      <div
+        className="page-scroll ptr-container"
+        ref={scrollRef}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        style={{ paddingTop: pulling > 0 ? pulling : undefined }}
+      >
+        {(pulling > 0 || refreshing) && (
+          <div className="ptr-indicator" style={{ opacity: refreshing ? 1 : pulling / PTR_THRESHOLD }}>
+            {refreshing
+              ? <div className="spinner" style={{ width: 20, height: 20 }} />
+              : <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ transform: `rotate(${Math.min(pulling / PTR_THRESHOLD, 1) * 180}deg)`, transition: 'transform 0.1s' }}><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            }
+          </div>
+        )}
+
+        <div className={`date-heading ${isToday ? 'today' : ''}`}>
+          {dateLabel}
+        </div>
+
+        <ResourceGrid date={selectedDate} />
+      </div>
 
     </div>
   );
