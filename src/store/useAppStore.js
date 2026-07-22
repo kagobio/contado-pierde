@@ -177,16 +177,18 @@ export const useAppStore = create((set, get) => ({
     }
   },
 
-  async adminCreateUser({ displayName, email, password, tarifa = 'tarifa1' }) {
+  async adminCreateUser({ displayName, email, tarifa = 'tarifa1' }) {
     const USER_COLORS = [
       '#FF6B35','#FF4757','#2ED573','#3498DB','#9B59B6',
       '#F39C12','#1ABC9C','#E91E8C','#00BCD4','#8BC34A',
     ];
+    // Random password — user will set their own via the invitation email
+    const tempPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10).toUpperCase();
     set({ syncState: 'syncing' });
     try {
       const { adminUsers } = get();
       const color = USER_COLORS[adminUsers.length % USER_COLORS.length];
-      const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+      const cred = await createUserWithEmailAndPassword(secondaryAuth, email, tempPassword);
       await setDoc(doc(db, 'users', cred.user.uid), {
         displayName: displayName.trim(),
         email,
@@ -197,7 +199,9 @@ export const useAppStore = create((set, get) => ({
         createdAt: serverTimestamp(),
       });
       await fbSignOut(secondaryAuth);
-      get().showToast(`Usuario ${displayName} creado`, 'success');
+      // Send invitation email — user clicks link to set their own password
+      await sendPasswordResetEmail(auth, email);
+      get().showToast(`Invitación enviada a ${email}`, 'success');
       get().loadAdminUsers();
       set({ syncState: 'ok' });
     } catch (err) {

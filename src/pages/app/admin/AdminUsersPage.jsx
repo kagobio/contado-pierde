@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from '../../../store/useAppStore';
 
-const DEFAULT_PASSWORD = 'Contado2025!';
-
 export default function AdminUsersPage() {
   const adminUsers         = useAppStore(s => s.adminUsers);
   const adminLoading       = useAppStore(s => s.adminLoading);
@@ -19,6 +17,7 @@ export default function AdminUsersPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm]         = useState({ displayName: '', email: '', tarifa: 'tarifa1' });
+
   const [creating, setCreating] = useState(false);
   const [created, setCreated]   = useState(null);
 
@@ -35,9 +34,9 @@ export default function AdminUsersPage() {
     if (!form.displayName.trim() || !form.email.trim()) return;
     setCreating(true);
     try {
-      await adminCreateUser({ ...form, password: DEFAULT_PASSWORD, tarifa: form.tarifa });
-      setCreated({ ...form, password: DEFAULT_PASSWORD });
-      setForm({ displayName: '', email: '' });
+      await adminCreateUser({ displayName: form.displayName, email: form.email, tarifa: form.tarifa });
+      setCreated({ ...form });
+      setForm({ displayName: '', email: '', tarifa: 'tarifa1' });
     } catch {
       // shown via toast
     } finally {
@@ -89,14 +88,12 @@ export default function AdminUsersPage() {
       {/* Success */}
       {created && (
         <div className="create-user-success">
-          <div style={{ fontWeight: 800, color: 'var(--success)', marginBottom: 8 }}>✓ Usuario creado</div>
-          <div style={{ fontSize: 13, marginBottom: 8 }}>Comparte estos datos con <strong>{created.displayName}</strong>:</div>
-          <div className="credentials-box">
-            <div><span style={{ color: 'var(--muted)' }}>Email</span><br /><strong>{created.email}</strong></div>
-            <div style={{ marginTop: 8 }}><span style={{ color: 'var(--muted)' }}>Contraseña</span><br /><strong>{created.password}</strong></div>
+          <div style={{ fontWeight: 800, color: 'var(--success)', marginBottom: 8 }}>✓ Invitación enviada</div>
+          <div style={{ fontSize: 13, marginBottom: 12, lineHeight: 1.5 }}>
+            <strong>{created.displayName}</strong> recibirá un email en <strong>{created.email}</strong> con un enlace para establecer su contraseña y acceder a la app.
           </div>
-          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
-            Se le pedirá cambiarla en el primer inicio de sesión.
+          <div style={{ fontSize: 11, color: 'var(--muted)', background: 'var(--bg3)', borderRadius: 10, padding: '10px 12px', lineHeight: 1.6 }}>
+            Si no le llega, revisa la carpeta de spam o usa "Reset contraseña" desde su perfil.
           </div>
           <button className="btn-ghost" style={{ marginTop: 10 }} onClick={resetForm}>Cerrar</button>
         </div>
