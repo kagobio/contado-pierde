@@ -158,7 +158,6 @@ export default function BookingModal() {
         <div className="modal-body">
           {/* Date */}
           <div className="modal-row">
-            <span className="modal-row-icon">📅</span>
             <div className="modal-row-main">
               <div className="modal-row-label">Fecha</div>
               <div className="modal-row-value">{formatDateFull(selectedSlot.date)}</div>
@@ -233,7 +232,6 @@ export default function BookingModal() {
               </div>
               {myBookingDoc.notes && (
                 <div className="modal-row">
-                  <span className="modal-row-icon">📝</span>
                   <div className="modal-row-main">
                     <div className="modal-row-label">Notas</div>
                     <div className="modal-row-value" style={{ fontSize: 14, fontWeight: 500 }}>{myBookingDoc.notes}</div>

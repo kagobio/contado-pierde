@@ -82,7 +82,7 @@ function BookingItem({ booking, resource, onCancel, onEdit }) {
         <div className="booking-item-name">{resource?.name || booking.resourceId}</div>
         <div className="booking-item-detail">{timeRange}</div>
         {booking.notes && (
-          <div className="booking-item-notes">📝 {booking.notes}</div>
+          <div className="booking-item-notes">{booking.notes}</div>
         )}
       </div>
 

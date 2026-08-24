@@ -71,12 +71,12 @@ export default function ScheduleScreen() {
       )}
       {appConfig?.maintenanceMode && (
         <div className="maintenance-banner">
-          🔧 El laboratorio está en mantenimiento. No se pueden realizar nuevas reservas.
+          El laboratorio está en mantenimiento. No se pueden realizar nuevas reservas.
         </div>
       )}
       {showReminder && (
         <div className="reminder-banner">
-          <span className="reminder-banner-icon">🔔</span>
+          <span className="reminder-banner-dot" />
           <span>Tienes una reserva hoy a las {minutesToTime(upcomingToday.startMinute)}</span>
         </div>
       )}

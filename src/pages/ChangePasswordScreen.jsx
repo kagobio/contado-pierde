@@ -27,15 +27,15 @@ export default function ChangePasswordScreen() {
     <div className="login-screen">
       <div className="login-brand">
         <img src="/logo-voila.svg" alt="Voilà" className="login-logo-text" />
+        <div className="login-brand-sub">Darkroom</div>
       </div>
 
       <form className="login-card" onSubmit={handleSubmit}>
-        <div style={{ textAlign: 'center', marginBottom: 4 }}>
-          <div style={{ fontSize: 22, marginBottom: 8 }}>🔐</div>
-          <div style={{ fontWeight: 800, fontSize: 16 }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="login-title" style={{ textAlign: 'center' }}>
             Hola{userDoc?.displayName ? `, ${userDoc.displayName}` : ''}
           </div>
-          <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 6 }}>
+          <div style={{ fontSize: 13.5, color: 'var(--text2)', marginTop: 8, lineHeight: 1.5 }}>
             Es tu primera vez. Elige una contraseña propia para continuar.
           </div>
         </div>

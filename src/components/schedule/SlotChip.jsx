@@ -30,7 +30,7 @@ export default function SlotChip({ slot, resourceId, date }) {
     available: 'libre',
     mine:      isStart ? 'mía' : '↑',
     occupied:  isStart ? (occupiedInitials || 'ocup.') : '↑',
-    blocked:   '🔒',
+    blocked:   '—',
     past:      '—',
   };
 
@@ -57,7 +57,7 @@ export default function SlotChip({ slot, resourceId, date }) {
     >
       <span className="slot-chip-time">{slot.label}</span>
       <span className="slot-chip-label">
-        {status === 'blocked' ? (block?.label ? block.label.slice(0, 6) : '🔒') : statusLabels[status]}
+        {status === 'blocked' ? (block?.label ? block.label.slice(0, 6) : '—') : statusLabels[status]}
       </span>
     </button>
   );

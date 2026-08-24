@@ -30,8 +30,8 @@ export default function AdminScreen() {
   if (userDoc?.role !== 'admin') {
     return (
       <div className="empty-state" style={{ marginTop: 60 }}>
-        <div className="empty-state-icon">🔒</div>
-        <div className="empty-state-text">Solo accesible para administradores</div>
+        <div className="empty-state-title">Acceso restringido</div>
+        <div className="empty-state-text">Esta sección es solo para administradores.</div>
       </div>
     );
   }

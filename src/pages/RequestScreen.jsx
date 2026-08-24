@@ -50,15 +50,17 @@ export default function RequestScreen() {
           <div className="login-brand-sub">Darkroom</div>
         </div>
         <div className="login-card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 40, marginBottom: 8 }}>✅</div>
-          <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 8 }}>¡Solicitud enviada!</div>
-          <div style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.5 }}>
-            Hemos recibido tu solicitud. Revisaremos la disponibilidad y te enviaremos
-            un correo de confirmación a <b style={{ color: 'var(--text)' }}>{email}</b>.
+          <div className="request-success-icon">
+            <svg viewBox="0 0 24 24" className="request-success-check"><path d="M5 13l4 4L19 7" /></svg>
+          </div>
+          <div className="login-title" style={{ textAlign: 'center' }}>Solicitud enviada</div>
+          <div style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.55 }}>
+            La hemos recibido correctamente. Revisaremos la disponibilidad y te
+            escribiremos a <b style={{ color: 'var(--text)' }}>{email}</b> para confirmarla.
           </div>
           <button
             className="login-btn"
-            style={{ marginTop: 20 }}
+            style={{ marginTop: 8 }}
             onClick={() => {
               setDone(false);
               setName(''); setEmail(''); setPhone('');
@@ -67,8 +69,8 @@ export default function RequestScreen() {
           >
             Enviar otra solicitud
           </button>
-          <div className="login-footer" style={{ marginTop: 14 }}>
-            <a href="/" style={{ color: 'var(--text2)', textDecoration: 'none' }}>← Acceso socios</a>
+          <div className="login-footer">
+            <a href="/" style={{ color: 'var(--text2)' }}>← Acceso socios</a>
           </div>
         </div>
       </div>
@@ -83,9 +85,12 @@ export default function RequestScreen() {
       </div>
 
       <form className="login-card" onSubmit={handleSubmit}>
-        <div className="login-title">Solicitar sesión</div>
-        <div style={{ fontSize: 13, color: 'var(--text2)', marginTop: -4, marginBottom: 4, lineHeight: 1.4 }}>
-          Para clientes puntuales. Elige día y franja; te confirmamos por email.
+        <div>
+          <div className="login-title">Reservar una sesión</div>
+          <p className="request-intro">
+            Para clientes puntuales. Elige el día y la franja; revisamos la
+            disponibilidad y te confirmamos por email.
+          </p>
         </div>
 
         <div className="login-field">
@@ -101,7 +106,7 @@ export default function RequestScreen() {
         </div>
 
         <div className="login-field">
-          <label className="login-label">Teléfono <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(opcional)</span></label>
+          <label className="login-label">Teléfono <span className="field-optional">· opcional</span></label>
           <input className="login-input" type="tel" autoComplete="tel" placeholder="600 000 000"
             value={phone} onChange={e => setPhone(e.target.value)} />
         </div>
@@ -114,36 +119,25 @@ export default function RequestScreen() {
 
         <div className="login-field">
           <label className="login-label">Franja horaria</label>
-          <div style={{ display: 'flex', gap: 10 }}>
-            {REQUEST_SLOTS.map(s => {
-              const selected = slot === s.id;
-              return (
-                <button
-                  type="button"
-                  key={s.id}
-                  onClick={() => setSlot(s.id)}
-                  style={{
-                    flex: 1,
-                    padding: '12px 8px',
-                    borderRadius: 12,
-                    border: `1.5px solid ${selected ? 'var(--accent)' : 'var(--border2)'}`,
-                    background: selected ? 'var(--accent-dim)' : 'var(--bg3)',
-                    color: 'var(--text)',
-                    textAlign: 'center',
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  <div style={{ fontWeight: 700, fontSize: 15, color: selected ? 'var(--accent)' : 'var(--text)' }}>{s.label}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 2 }}>{s.time}</div>
-                </button>
-              );
-            })}
+          <div className="slot-toggle">
+            {REQUEST_SLOTS.map(s => (
+              <button
+                type="button"
+                key={s.id}
+                className={`slot-toggle-btn ${slot === s.id ? 'selected' : ''}`}
+                onClick={() => setSlot(s.id)}
+                aria-pressed={slot === s.id}
+              >
+                <span className="slot-toggle-label">{s.label}</span>
+                <span className="slot-toggle-time">{s.time}</span>
+              </button>
+            ))}
           </div>
         </div>
 
         <div className="login-field">
-          <label className="login-label">Comentario <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(opcional)</span></label>
-          <textarea className="login-input" style={{ minHeight: 64, resize: 'vertical' }}
+          <label className="login-label">Comentario <span className="field-optional">· opcional</span></label>
+          <textarea className="login-input" style={{ minHeight: 68, resize: 'vertical' }}
             placeholder="Cuéntanos lo que necesites…"
             value={note} onChange={e => setNote(e.target.value)} maxLength={300} />
         </div>
@@ -155,7 +149,7 @@ export default function RequestScreen() {
         </button>
 
         <div className="login-footer">
-          <a href="/" style={{ color: 'var(--text2)', textDecoration: 'none' }}>← Acceso socios</a>
+          <a href="/" style={{ color: 'var(--text2)' }}>← Acceso socios</a>
         </div>
       </form>
     </div>

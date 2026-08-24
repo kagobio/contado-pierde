@@ -5,13 +5,14 @@ import { getSlotStatus } from '../../utils';
 import SlotChip from './SlotChip';
 import ResourceIcon from '../shared/ResourceIcon';
 
+// Muted, cohesive category tints — the red brand stays the single hero color
 const CATEGORY_ACCENT = {
-  enlarger_cabin: '#FF6B35',
-  enlarger_post:  '#FFD100',
-  large_format:   '#47C8FF',
-  film_develop:   '#C847FF',
-  scanner:        '#39D353',
-  other:          '#888888',
+  enlarger_cabin: '#E06A4E',
+  enlarger_post:  '#D9A441',
+  large_format:   '#4A93C4',
+  film_develop:   '#9B6FC4',
+  scanner:        '#4FA96A',
+  other:          '#8A8A93',
 };
 
 export default function ResourceCard({ resource, date, index = 0 }) {
@@ -58,7 +59,7 @@ export default function ResourceCard({ resource, date, index = 0 }) {
         {/* Occupancy pill */}
         {total > 0 && !open && (
           <div className="occupancy-pill" style={{
-            '--occ-color': freeCount === 0 ? 'var(--danger)' : freeCount <= 2 ? '#FFD100' : 'var(--success)',
+            '--occ-color': freeCount === 0 ? 'var(--danger)' : freeCount <= 2 ? 'var(--warning)' : 'var(--success)',
           }}>
             <span className="occupancy-dot" />
             <span>{freeCount} libre{freeCount !== 1 ? 's' : ''}</span>
