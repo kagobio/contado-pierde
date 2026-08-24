@@ -26,7 +26,7 @@ export default function ChangePasswordScreen() {
   return (
     <div className="login-screen">
       <div className="login-brand">
-        <img src="/logo-cp2.svg" alt="Contado Pierde" className="login-logo-text" />
+        <img src="/logo-voila.svg" alt="Voilà" className="login-logo-text" />
       </div>
 
       <form className="login-card" onSubmit={handleSubmit}>

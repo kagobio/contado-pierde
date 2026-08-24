@@ -3,12 +3,12 @@ import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBIejxsavxmMDHdRgNBzbGhV-9xKHM-Joo",
-  authDomain: "contado-pierde.firebaseapp.com",
-  projectId: "contado-pierde",
-  storageBucket: "contado-pierde.firebasestorage.app",
-  messagingSenderId: "386759948648",
-  appId: "1:386759948648:web:e8e855ba94a5ecaa52fedd"
+  apiKey: "AIzaSyAp20mDT4qJaaG_E2VZ6E73aM5WfJ1s8kc",
+  authDomain: "voiladarkroom1.firebaseapp.com",
+  projectId: "voiladarkroom1",
+  storageBucket: "voiladarkroom1.firebasestorage.app",
+  messagingSenderId: "808276682190",
+  appId: "1:808276682190:web:eac129c675eef1f248779f"
 };
 
 const app = initializeApp(firebaseConfig);

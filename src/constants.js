@@ -93,6 +93,18 @@ export const DAYS_FULL  = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves',
 export const MONTHS     = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 export const MONTHS_SHORT = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 
+// ── Client request slots (occasional clients — public form) ────────────────
+// Fixed morning / afternoon sessions for one-off clients (no account needed)
+export const REQUEST_SLOTS = [
+  { id: 'morning',   label: 'Mañana', time: '11:00 – 14:00' },
+  { id: 'afternoon', label: 'Tarde',  time: '17:00 – 21:00' },
+];
+
+export const REQUEST_SLOT_LABELS = {
+  morning:   'Mañana (11:00–14:00)',
+  afternoon: 'Tarde (17:00–21:00)',
+};
+
 // ── User accent colors ─────────────────────────────────────────────────────
 export const USER_COLORS = [
   '#ff6b35', '#e8ff47', '#47c8ff', '#ff47c8', '#47ff9f',

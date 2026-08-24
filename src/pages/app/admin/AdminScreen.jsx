@@ -7,8 +7,10 @@ import AdminConfigPage    from './AdminConfigPage';
 import AdminStatsPage     from './AdminStatsPage';
 import AdminBlocksPage    from './AdminBlocksPage';
 import AdminChemicalsPage from './AdminChemicalsPage';
+import AdminRequestsPage  from './AdminRequestsPage';
 
 const ADMIN_TABS = [
+  { id: 'requests',  label: 'Solicitudes' },
   { id: 'resources', label: 'Recursos' },
   { id: 'schedules', label: 'Horarios' },
   { id: 'bookings',  label: 'Reservas' },
@@ -48,6 +50,7 @@ export default function AdminScreen() {
         ))}
       </nav>
 
+      {adminPage === 'requests'  && <AdminRequestsPage />}
       {adminPage === 'resources' && <AdminResourcesPage />}
       {adminPage === 'schedules' && <AdminSchedulePage />}
       {adminPage === 'bookings'  && <AdminBookingsPage />}

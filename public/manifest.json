@@ -1,7 +1,7 @@
 {
-  "name": "Contado Pierde",
-  "short_name": "Contado Pierde",
-  "description": "Reservas del laboratorio fotográfico Contado Pierde",
+  "name": "Voilà",
+  "short_name": "Voilà",
+  "description": "Reservas del laboratorio Voilà",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
@@ -9,7 +9,7 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/logo-cp2.svg",
+      "src": "/logo-voila.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

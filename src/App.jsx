@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useAppStore } from './store/useAppStore';
 import LoadingScreen          from './pages/LoadingScreen';
 import LoginScreen            from './pages/LoginScreen';
+import RequestScreen          from './pages/RequestScreen';
 import ChangePasswordScreen   from './pages/ChangePasswordScreen';
 import TopBar          from './components/TopBar';
 import NavBar          from './components/NavBar';
@@ -34,6 +35,11 @@ export default function App() {
   }
 
   useEffect(() => { initAuth(); }, []);
+
+  // Public route for occasional clients — no login required
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/reservar')) {
+    return <RequestScreen />;
+  }
 
   if (screen === 'loading')        return <LoadingScreen />;
   if (screen === 'login')          return <LoginScreen />;

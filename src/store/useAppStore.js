@@ -279,6 +279,65 @@ export const useAppStore = create((set, get) => ({
   setAdminPage(page)   { set({ adminPage: page }); },
   setSelectedCategory(cat) { set({ selectedCategory: cat }); },
 
+  // ════════════════════════════════════════════════════════════════════════
+  // CLIENT REQUESTS — occasional clients, public form, no account needed
+  // ════════════════════════════════════════════════════════════════════════
+
+  // Public: submit a session request (day + morning/afternoon)
+  async submitRequest({ name, email, phone, date, slot, note }) {
+    await setDoc(doc(collection(db, 'requests')), {
+      name,
+      email,
+      phone:     phone || null,
+      date,
+      slot,
+      note:      note || null,
+      status:    'pending',
+      createdAt: serverTimestamp(),
+    });
+  },
+
+  adminRequests: [],
+
+  async loadAdminRequests() {
+    set({ adminLoading: true });
+    try {
+      const snap = await getDocs(query(collection(db, 'requests'), orderBy('createdAt', 'desc')));
+      const adminRequests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      set({ adminRequests, adminLoading: false });
+    } catch (err) {
+      console.error(err);
+      set({ adminLoading: false });
+      get().showToast('Error al cargar solicitudes', 'error');
+    }
+  },
+
+  async adminSetRequestStatus(id, status) {
+    try {
+      await updateDoc(doc(db, 'requests', id), { status });
+      const msg = status === 'confirmed' ? 'Solicitud confirmada'
+                : status === 'rejected'  ? 'Solicitud rechazada'
+                : 'Solicitud actualizada';
+      get().showToast(msg, 'success');
+      get().loadAdminRequests();
+    } catch (err) {
+      console.error(err);
+      get().showToast('Error al actualizar', 'error');
+    }
+  },
+
+  async adminDeleteRequest(id) {
+    if (!confirm('¿Eliminar esta solicitud definitivamente?')) return;
+    try {
+      await deleteDoc(doc(db, 'requests', id));
+      get().showToast('Solicitud eliminada', 'success');
+      get().loadAdminRequests();
+    } catch (err) {
+      console.error(err);
+      get().showToast('Error al eliminar', 'error');
+    }
+  },
+
   setSelectedDate(dateStr) {
     const newWeekStart = getWeekStart(dateStr);
     const { weekStart } = get();
@@ -922,7 +981,7 @@ export const useAppStore = create((set, get) => ({
         maxAdvanceDays:            14,
         cancellationDeadlineHours: 2,
         maintenanceMode:           false,
-        labName:                   'Contado Pierde',
+        labName:                   'Voilà',
         announcementText:          null,
       }, { merge: true });
 

@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   CONTADO PIERDE — Design System
-   Dark theme. Safelight palette. Mobile-first.
+   VOILÀ — Design System
+   Dark theme. Red accent. Mobile-first.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
@@ -11,16 +11,16 @@
   --border:    rgba(255,255,255,0.07);
   --border2:   rgba(255,255,255,0.14);
 
-  /* Kodak yellow as primary accent */
-  --accent:         #FFD100;
-  --accent-dim:     rgba(255, 209, 0, 0.10);
-  --accent-hover:   #ffe033;
+  /* Voilà red as primary accent */
+  --accent:         #FF2323;
+  --accent-dim:     rgba(255, 35, 35, 0.10);
+  --accent-hover:   #ff4d4d;
 
   /* Slot status colors */
   --slot-available: #34c759;
   --slot-available-dim: rgba(52, 199, 89, 0.10);
-  --slot-mine:      #FFD100;
-  --slot-mine-dim:  rgba(255, 209, 0, 0.12);
+  --slot-mine:      #FF2323;
+  --slot-mine-dim:  rgba(255, 35, 35, 0.12);
   --slot-occupied:  rgba(255,255,255,0.04);
   --slot-past:      transparent;
 
@@ -95,7 +95,7 @@ a { color: inherit; text-decoration: none; }
 }
 .loading-logo-img {
   height: 36px; width: auto; max-width: 60vw;
-  filter: brightness(0) saturate(100%) invert(87%) sepia(78%) saturate(775%) hue-rotate(356deg) brightness(106%);
+  filter: none;
   animation: fadeIn 0.6s ease both;
 }
 
@@ -107,11 +107,11 @@ a { color: inherit; text-decoration: none; }
 .login-brand { text-align: center; margin-bottom: 28px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .login-logo-sheep {
   width: 70px; height: auto;
-  filter: brightness(0) saturate(100%) invert(87%) sepia(78%) saturate(775%) hue-rotate(356deg) brightness(106%);
+  filter: none;
 }
 .login-logo-text {
-  height: 48px; width: auto; max-width: 90vw;
-  filter: brightness(0) saturate(100%) invert(87%) sepia(78%) saturate(775%) hue-rotate(356deg) brightness(106%);
+  height: 64px; width: auto; max-width: 90vw;
+  filter: none;
 }
 .login-brand-sub {
   font-size: 11px; letter-spacing: 0.06em; color: var(--muted);
@@ -178,7 +178,7 @@ a { color: inherit; text-decoration: none; }
 }
 .topbar-logo-img {
   height: 24px; width: auto; max-width: 45vw;
-  filter: brightness(0) saturate(100%) invert(87%) sepia(78%) saturate(775%) hue-rotate(356deg) brightness(106%);
+  filter: none;
 }
 .topbar-right { display: flex; align-items: center; gap: 8px; }
 .topbar-user-btn {

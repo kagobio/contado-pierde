@@ -24,8 +24,8 @@ export default function LoginScreen() {
   return (
     <div className="login-screen">
       <div className="login-brand">
-        <img src="/logo-cp2.svg" alt="Contado Pierde" className="login-logo-text" />
-        <div className="login-brand-sub">Laboratorio Fotográfico</div>
+        <img src="/logo-voila.svg" alt="Voilà" className="login-logo-text" />
+        <div className="login-brand-sub">Darkroom</div>
       </div>
 
       <form className="login-card" onSubmit={handleSubmit}>
@@ -65,6 +65,12 @@ export default function LoginScreen() {
 
         <div className="login-footer">
           ¿No tienes cuenta? Contacta con un administrador.
+        </div>
+        <div className="login-footer" style={{ marginTop: 6 }}>
+          ¿Cliente puntual?{' '}
+          <a href="/reservar" style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}>
+            Solicitar una sesión
+          </a>
         </div>
       </form>
     </div>
