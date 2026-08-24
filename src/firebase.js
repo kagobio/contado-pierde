@@ -14,6 +14,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+// Send Firebase Auth system emails (member invites / password resets) in Spanish
+auth.languageCode = 'es';
 
 // Secondary app instance — used by admins to create users without
 // signing out from the main session
