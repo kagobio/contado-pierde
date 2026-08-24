@@ -253,7 +253,12 @@ export const useAppStore = create((set, get) => ({
   },
 
   async adminDeleteUser(uid, displayName) {
-    if (!confirm(`¿Eliminar completamente a ${displayName}? Esta acción no se puede deshacer.`)) return;
+    if (!confirm(
+      `Eliminar a ${displayName}: perderá el acceso y se borrará su ficha.\n\n` +
+      `Su histórico de reservas y su cuenta de acceso (email) se conservan, ` +
+      `y ese email no podrá reutilizarse para un alta nueva.\n\n` +
+      `Para un bloqueo reversible, es mejor usar "Desactivar". ¿Continuar?`
+    )) return;
     try {
       await deleteDoc(doc(db, 'users', uid));
       get().showToast(`${displayName} eliminado`, 'success');
