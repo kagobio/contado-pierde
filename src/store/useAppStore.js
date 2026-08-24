@@ -210,7 +210,9 @@ export const useAppStore = create((set, get) => ({
         role: 'member',
         color,
         tarifa,
-        mustChangePassword: true,
+        // Invited members set their own password via the email link,
+        // so no forced in-app change is needed on first login.
+        mustChangePassword: false,
         createdAt: serverTimestamp(),
         ...(expiresAt && { expiresAt }),
       });
