@@ -16,6 +16,27 @@ export default function AdminRequestsPage() {
 
   const pending = adminRequests.filter(r => r.status === 'pending').length;
 
+  // Opens the admin's mail client with a ready-to-send confirmation
+  function emailClient(r) {
+    const fecha  = formatDateFull(r.date);
+    const franja = REQUEST_SLOT_LABELS[r.slot] || r.slot;
+    const subject = `Confirmación de tu sesión en Voilà — ${fecha}`;
+    const body =
+      `Hola ${r.name},\n\n` +
+      `Tu sesión en Voilà queda confirmada:\n\n` +
+      `Día: ${fecha}\n` +
+      `Franja: ${franja}\n\n` +
+      `Te esperamos. Si necesitas cambiar algo, responde a este correo.\n\n` +
+      `Un saludo,\nVoilà Darkroom`;
+    window.location.href =
+      `mailto:${r.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+
+  function confirmAndEmail(r) {
+    emailClient(r);          // open the pre-filled email first (user gesture)
+    setStatus(r.id, 'confirmed');
+  }
+
   return (
     <div className="admin-content">
       <div className="requests-head">
@@ -48,7 +69,10 @@ export default function AdminRequestsPage() {
 
           <div className="request-card-actions">
             {r.status !== 'confirmed' && (
-              <button className="req-action confirm" onClick={() => setStatus(r.id, 'confirmed')}>Confirmar</button>
+              <button className="req-action confirm" onClick={() => confirmAndEmail(r)}>Confirmar y avisar</button>
+            )}
+            {r.status === 'confirmed' && (
+              <button className="req-action" onClick={() => emailClient(r)}>Escribir email</button>
             )}
             {r.status !== 'rejected' && (
               <button className="req-action" onClick={() => setStatus(r.id, 'rejected')}>Rechazar</button>
