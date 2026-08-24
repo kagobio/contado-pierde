@@ -172,22 +172,20 @@ export default function AdminBlocksPage() {
 
       {allBlocks.map(b => (
         <div key={b.id} className="block-row">
-          <div className="block-row-icon">🔒</div>
           <div className="block-row-body">
             <div className="block-row-label">{b.label}</div>
             <div className="block-row-date">{formatDateFull(b.date)}</div>
             <div className="block-row-scope">{blockScopeLabel(b)}</div>
           </div>
           <button className="user-action-btn danger" onClick={() => handleDelete(b.id)}>
-            ✕ Eliminar
+            Eliminar
           </button>
         </div>
       ))}
 
       {!loadingAll && allBlocks.length === 0 && (
         <div className="empty-state">
-          <div className="empty-state-icon">🔓</div>
-          <div className="empty-state-text">Sin bloqueos programados</div>
+          <div className="empty-state-title">Sin bloqueos programados</div>
         </div>
       )}
     </div>

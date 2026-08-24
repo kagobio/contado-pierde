@@ -89,7 +89,7 @@ export default function AdminUsersPage() {
       {/* Success */}
       {created && (
         <div className="create-user-success">
-          <div style={{ fontWeight: 800, color: 'var(--success)', marginBottom: 8 }}>✓ Invitación enviada</div>
+          <div style={{ fontWeight: 800, color: 'var(--success)', marginBottom: 8 }}>Invitación enviada</div>
           <div style={{ fontSize: 13, marginBottom: 12, lineHeight: 1.5 }}>
             <strong>{created.displayName}</strong> recibirá un email en <strong>{created.email}</strong> con un enlace para establecer su contraseña y acceder a la app.
           </div>
@@ -146,7 +146,7 @@ export default function AdminUsersPage() {
             <div className="user-card-actions">
               <button className="user-action-btn"
                 onClick={() => setUserRole(user.id, user.role === 'admin' ? 'member' : 'admin')}>
-                {user.role === 'admin' ? '↓ Quitar admin' : '↑ Hacer admin'}
+                {user.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}
               </button>
               <button className="user-action-btn"
                 onClick={() => {
@@ -154,28 +154,28 @@ export default function AdminUsersPage() {
                   const next = cycle[user.tarifa || 'tarifa1'] || 'tarifa2';
                   setUserTarifa(user.id, next);
                 }}>
-                ⇄ → {appConfig?.tarifas?.[(({ tarifa1: 'tarifa2', tarifa2: 'tarifa3', tarifa3: 'tarifa1' })[user.tarifa || 'tarifa1'])]?.name || 'siguiente'}
+                Cambiar a {appConfig?.tarifas?.[(({ tarifa1: 'tarifa2', tarifa2: 'tarifa3', tarifa3: 'tarifa1' })[user.tarifa || 'tarifa1'])]?.name || 'siguiente'}
               </button>
               {user.expiresAt && (
                 <button className="user-action-btn success"
                   onClick={() => adminRenewAccess(user.id, user.displayName)}>
-                  ↻ Renovar acceso
+                  Renovar acceso
                 </button>
               )}
               <button className="user-action-btn"
                 onClick={() => adminResetPassword(user.email)}>
-                ✉ Reset contraseña
+                Reset contraseña
               </button>
               {user.disabled
                 ? <button className="user-action-btn success" onClick={() => adminEnableUser(user.id, user.displayName)}>
-                    ✓ Reactivar
+                    Reactivar
                   </button>
                 : <button className="user-action-btn warning" onClick={() => adminDisableUser(user.id, user.displayName)}>
-                    ⊘ Desactivar
+                    Desactivar
                   </button>
               }
               <button className="user-action-btn danger" onClick={() => adminDeleteUser(user.id, user.displayName)}>
-                ✕ Eliminar
+                Eliminar
               </button>
             </div>
           )}

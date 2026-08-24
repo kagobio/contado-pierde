@@ -60,7 +60,7 @@ export default function AdminBookingsPage() {
         <span style={{ fontSize: 12, color: 'var(--muted)' }}>{adminBookings.length} reservas</span>
         {adminBookings.length > 0 && (
           <button onClick={exportCSV} style={{ fontSize: 12, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
-            ↓ Exportar CSV
+            Exportar CSV
           </button>
         )}
       </div>
@@ -87,14 +87,13 @@ export default function AdminBookingsPage() {
               </button>
             )}
           </div>
-          {b.notes && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>📝 {b.notes}</div>}
+          {b.notes && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{b.notes}</div>}
         </div>
       ))}
 
       {!adminLoading && adminBookings.length === 0 && (
         <div className="empty-state">
-          <div className="empty-state-icon">🔍</div>
-          <div className="empty-state-text">Sin resultados</div>
+          <div className="empty-state-title">Sin resultados</div>
         </div>
       )}
     </div>

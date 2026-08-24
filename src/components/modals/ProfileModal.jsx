@@ -63,7 +63,12 @@ export default function ProfileModal() {
           >
             {!userDoc?.photoURL && initial}
             <div className="profile-avatar-overlay">
-              {uploading ? <span className="spinner sm" /> : '📷'}
+              {uploading ? <span className="spinner sm" /> : (
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+              )}
             </div>
           </div>
           <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />

@@ -166,7 +166,6 @@ export default function BookingModal() {
 
           {/* Start time */}
           <div className="modal-row">
-            <span className="modal-row-icon">⏰</span>
             <div className="modal-row-main">
               <div className="modal-row-label">Hora de inicio</div>
               <div className="modal-row-value">{minutesToTime(selectedSlot.startMinute)}</div>
@@ -306,7 +305,7 @@ export default function BookingModal() {
                 onClick={confirmBooking}
                 disabled={bookingLoading || !chosenDuration || availableDurations.length === 0}
               >
-                {bookingLoading ? <><span className="spinner sm" /> Guardando…</> : '✓ Reservar'}
+                {bookingLoading ? <><span className="spinner sm" /> Guardando…</> : 'Reservar'}
               </button>
               <button className="btn-ghost" onClick={closeModal}>cancelar</button>
             </>

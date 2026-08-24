@@ -102,11 +102,8 @@ export default function AdminStatsPage() {
 
       {adminBookings.length === 0 && (
         <div className="empty-state">
-          <div className="empty-state-icon">📊</div>
-          <div className="empty-state-text">Sin datos</div>
-          <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 6 }}>
-            Carga reservas desde la pestaña Reservas primero
-          </div>
+          <div className="empty-state-title">Sin datos</div>
+          <div className="empty-state-text">Carga reservas desde la pestaña Reservas primero.</div>
         </div>
       )}
     </div>
